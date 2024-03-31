@@ -24,7 +24,7 @@ void framebuffer_write(uint8_t row, uint8_t col, char c, uint8_t fg, uint8_t bg)
 
 void framebuffer_clear(void) {
     // TODO : Implement
-    size_t n = 80 * 25;
+    size_t n = 160 * 25;
     for (size_t i = 0; i < n; i += 2) {
         FRAMEBUFFER_MEMORY_OFFSET[i] = 0x00;
         FRAMEBUFFER_MEMORY_OFFSET[i + 1] = 0x07;
