@@ -6,6 +6,12 @@
 #include "header/cpu/portio.h"
 #include "header/stdlib/string.h"
 
+struct NewLineTable new_line_table;
+
+void init_new_line_table() {
+    new_line_table.size = 0;
+}
+
 void framebuffer_set_cursor(uint8_t r, uint8_t c)
 {
     // TODO : Implement

@@ -9,6 +9,20 @@
 #define CURSOR_PORT_CMD 0x03D4
 #define CURSOR_PORT_DATA 0x03D5
 
+struct PositionBuffer {
+    uint8_t row;
+    uint8_t col;
+};
+
+struct NewLineTable {
+    uint16_t size;
+    struct PositionBuffer table[80*25];
+};
+
+extern struct NewLineTable new_line_table;
+
+void init_new_line_table();
+
 /**
  * Terminal framebuffer
  * Resolution: 80x25

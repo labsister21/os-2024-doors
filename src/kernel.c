@@ -7,6 +7,7 @@
 #include "header/driver/keyboard.h"
 #include "header/cpu/interrupt.h"
 
+
 void kernel_setup(void)
 {
   load_gdt(&_gdt_gdtr);
@@ -18,20 +19,39 @@ void kernel_setup(void)
   keyboard_state_activate();
   int col = 0;
   int row = 0;
+  init_new_line_table();
   while (true)
   {
     char c;
     get_keyboard_buffer(&c);
     if (c){
       if (c != '\b') {
-        framebuffer_write(row, col, c, 0xF, 0);
-        col++;
-        row += col/80;
-        col %= 80;
-        framebuffer_set_cursor(row, col);
+        if (c != '\n') {
+          framebuffer_write(row, col, c, 0xF, 0);
+          col++;
+          row += col/80;
+          col %= 80;
+          framebuffer_set_cursor(row, col);
+        } else {
+          if (col != 79) {
+            new_line_table.table[new_line_table.size].row = (uint8_t) row;
+            new_line_table.table[new_line_table.size].col = (uint8_t) col;
+            new_line_table.size++;
+          }
+          col = 0;
+          row ++;
+          framebuffer_set_cursor(row, col);
+        }
       } else if (col > 0 || row > 0) {
-        framebuffer_erase(&row, &col);
-        framebuffer_set_cursor(row, col);
+        if (col == 0 && new_line_table.size > 0) {
+          row--;
+          col = new_line_table.table[new_line_table.size-1].col;
+          new_line_table.size--;
+          framebuffer_set_cursor(row, col);
+        } else {
+          framebuffer_erase(&row, &col);
+          framebuffer_set_cursor(row, col);
+        }
       }
     }
       
