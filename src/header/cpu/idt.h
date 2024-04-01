@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include "gdt.h"
 
 // IDT hard limit, see Intel x86 manual 3a - 6.10 Interrupt Descriptor Table
 #define IDT_MAX_ENTRY_COUNT    256
@@ -29,7 +30,7 @@ extern struct IDTR _idt_idtr;
  * @param gate_32     Is this gate size 32-bit? If not then its 16-bit gate
  * @param _r_bit_3    Reserved for idtgate type, bit length: 1
  * @param privilege_level 2-bit contain descriptor privilege level (DPL)
- * @param segment_present 1-bit contain segment present (P)
+ * @param valid_bit 1-bit contain segment present (P)
  * ...
  */
 struct IDTGate {
@@ -46,7 +47,7 @@ struct IDTGate {
     uint8_t gate_32: 1;
     uint8_t _r_bit_3: 1;
     uint8_t privilege_level: 2;
-    uint8_t segment_present: 1;
+    uint8_t valid_bit: 1;
     uint16_t offset_high;
 
 } __attribute__((packed));
