@@ -41,6 +41,7 @@ void keyboard_state_deactivate(void) {
 // Get keyboard buffer value and flush the buffer - @param buf Pointer to char buffer
 void get_keyboard_buffer(char *buf) {
     *buf = keyboard_state.keyboard_buffer;
+    keyboard_state.keyboard_buffer = 0;
 }
 
 /* -- Keyboard Interrupt Service Routine -- */
