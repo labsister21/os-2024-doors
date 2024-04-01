@@ -4,6 +4,8 @@
         "gdt.h": "c",
         "stdint.h": "c",
         "stdint-gcc.h": "c",
-        "idt.h": "c"
+        "idt.h": "c",
+        "keyboard.h": "c",
+        "libc-header-start.h": "c"
     },
 }

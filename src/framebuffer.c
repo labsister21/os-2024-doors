@@ -34,3 +34,16 @@ void framebuffer_clear(void)
         FRAMEBUFFER_MEMORY_OFFSET[i + 1] = 0x07;
     }
 }
+
+void framebuffer_erase(int *row, int *col) {
+    int pos = 160*(*row) + ((*col)%80-1)*2;
+    FRAMEBUFFER_MEMORY_OFFSET[pos] = 0x00;
+    FRAMEBUFFER_MEMORY_OFFSET[pos+1] = 0x07;
+    if (*col > 0 || *row > 0) {
+        (*col) --;
+        if (*col < 0) {
+            (*row) --;
+            *col = 79;
+        }
+    }
+}
