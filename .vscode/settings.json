@@ -3,6 +3,7 @@
     "files.associations": {
         "gdt.h": "c",
         "stdint.h": "c",
-        "stdint-gcc.h": "c"
+        "stdint-gcc.h": "c",
+        "idt.h": "c"
     },
 }
