@@ -58,7 +58,7 @@ void keyboard_isr(void)
     uint8_t scancode = in(KEYBOARD_DATA_PORT);
     // TODO : Implement scancode processing
     if (keyboard_state.keyboard_input_on) {
-      if (!(scancode & 0x80)) {
+      if (!(scancode & 0x80)) {      
         char mapped_ascii = keyboard_scancode_1_to_ascii_map[scancode];
         keyboard_state.keyboard_buffer = mapped_ascii;
       }
