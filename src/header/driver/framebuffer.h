@@ -61,4 +61,6 @@ void framebuffer_clear(void);
 
 void framebuffer_erase(int *row, int * col);
 
+void typing_keyboard(int * row, int * col, char c);
+
 #endif
