@@ -6,7 +6,6 @@
 #include "header/cpu/idt.h"
 #include "header/driver/keyboard.h"
 #include "header/cpu/interrupt.h"
-// #include <stdio.h>
 
 void kernel_setup(void)
 {
@@ -24,7 +23,6 @@ void kernel_setup(void)
     char c;
     get_keyboard_buffer(&c);
     if (c){
-      // printf("char: %d\n", (int) c);
       if (c != '\b') {
         framebuffer_write(row, col, c, 0xF, 0);
         col++;
