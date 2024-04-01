@@ -1,8 +1,6 @@
 #include "header/cpu/idt.h"
 #include "header/cpu/gdt.h"
 
-void *isr_stub_table[ISR_STUB_TABLE_LIMIT];
-
 struct InterruptDescriptorTable interrupt_descriptor_table = {
     .table = {}};
 
