@@ -33,6 +33,7 @@ struct KeyboardDriverState
 {
     bool read_extended_mode;
     bool keyboard_input_on;
+    bool capslock;
     char keyboard_buffer;
 } __attribute((packed));
 

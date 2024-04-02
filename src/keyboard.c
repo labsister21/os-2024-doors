@@ -32,6 +32,7 @@ const char keyboard_scancode_1_to_ascii_map[256] = {
 void keyboard_state_activate(void) 
 {
     keyboard_state.keyboard_input_on = true;
+    keyboard_state.capslock = false;
 }
 
 // Deactivate keyboard ISR / stop listening keyboard interrupt
@@ -41,7 +42,7 @@ void keyboard_state_deactivate(void)
 }
 
 // Get keyboard buffer value and flush the buffer - @param buf Pointer to char buffer
-void get_keyboard_buffer(char *buf) 
+void get_keyboard_buffer(char *buf)
 {
     *buf = keyboard_state.keyboard_buffer;
     keyboard_state.keyboard_buffer = '\0';
@@ -58,10 +59,19 @@ void keyboard_isr(void)
     uint8_t scancode = in(KEYBOARD_DATA_PORT);
     // TODO : Implement scancode processing
     if (keyboard_state.keyboard_input_on) {
-      if (!(scancode & 0x80)) {      
-        char mapped_ascii = keyboard_scancode_1_to_ascii_map[scancode];
-        keyboard_state.keyboard_buffer = mapped_ascii;
-      }
+
+        if (!(scancode & 0x80)) {      
+            if (scancode == 0x3A) {
+                keyboard_state.capslock = !keyboard_state.capslock;
+            }
+            else {
+                char mapped_ascii = keyboard_scancode_1_to_ascii_map[scancode];
+                if (keyboard_state.capslock && 97 <= mapped_ascii && mapped_ascii <= 122) {
+                    mapped_ascii -= 32;
+                }
+                keyboard_state.keyboard_buffer = mapped_ascii;
+            }
+        }
     }
     pic_ack(IRQ_KEYBOARD);
     return;

@@ -27,18 +27,5 @@ void kernel_setup(void)
     get_keyboard_buffer(&c);
     typing_keyboard(&row, &col, c);
   }
-
-  // load_gdt(&_gdt_gdtr);
-  // pic_remap();
-  // activate_keyboard_interrupt();
-  // initialize_idt();
-  // framebuffer_clear();
-  // framebuffer_set_cursor(0, 0);
-
-  // struct BlockBuffer b;
-  // for (int i = 0; i < 512; i++)
-  //   b.buf[i] = i % 16;
-  // write_blocks(&b, 17, 1);
-  // while (true)
-  //   ;
+  keyboard_state_deactivate();
 }
