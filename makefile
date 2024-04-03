@@ -24,7 +24,7 @@ disk:
 # 	@qemu-system-i386 -s -S -cdrom $(OUTPUT_FOLDER)/$(ISO_NAME).iso
 
 run : all
-	@qemu-system-i386 -s -S -drive file=bin/storage.bin,format=raw,if=ide,index=0,media=disk -cdrom ${OUTPUT_FOLDER}/${ISO_NAME}.iso
+	@qemu-system-i386 -s -S -drive file=bin/sample-image.bin,format=raw,if=ide,index=0,media=disk -cdrom ${OUTPUT_FOLDER}/${ISO_NAME}.iso
 
 all: build
 build: iso

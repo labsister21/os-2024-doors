@@ -146,17 +146,17 @@ void initialize_filesystem_fat32(void)
 
 void write_clusters(const void *ptr, uint32_t cluster_number, uint8_t cluster_count)
 {
-    write_clusters(ptr, cluster_to_lba(cluster_number), cluster_to_lba(cluster_count));
+    write_blocks(ptr, cluster_to_lba(cluster_number), cluster_to_lba(cluster_count));
 }
 
 void read_clusters(void *ptr, uint32_t cluster_number, uint8_t cluster_count)
 {
-    read_clusters(ptr, cluster_to_lba(cluster_number), cluster_to_lba(cluster_count));
+    read_blocks(ptr, cluster_to_lba(cluster_number), cluster_to_lba(cluster_count));
 }
 
 int8_t read_directory(struct FAT32DriverRequest request)
 {
-    if (request.parent_cluster_number != FAT32_FAT_END_OF_FILE)
+    if (fat32_driver_state.fat_table.cluster_map[request.parent_cluster_number] != FAT32_FAT_END_OF_FILE)
         return -1;
     if (request.buffer_size != sizeof(struct FAT32DirectoryTable))
         return -1;
@@ -168,7 +168,7 @@ int8_t read_directory(struct FAT32DriverRequest request)
             continue;
         if (memcmp(fat32_driver_state.dir_table_buf.table[i].name, request.name, 8) == 0)
         {
-            if ((fat32_driver_state.dir_table_buf.table[i].attribute & ATTR_SUBDIRECTORY))
+            if (fat32_driver_state.dir_table_buf.table[i].attribute & ATTR_SUBDIRECTORY)
             {
                 uint32_t cluster_number = (fat32_driver_state.dir_table_buf.table[i].cluster_high << 16) | fat32_driver_state.dir_table_buf.table[i].cluster_low;
                 read_clusters(request.buf, cluster_number, 1);
@@ -182,7 +182,7 @@ int8_t read_directory(struct FAT32DriverRequest request)
 
 int8_t read(struct FAT32DriverRequest request)
 {
-    if (request.parent_cluster_number != FAT32_FAT_END_OF_FILE)
+    if (fat32_driver_state.fat_table.cluster_map[request.parent_cluster_number] != FAT32_FAT_END_OF_FILE)
         return -1;
     read_clusters(&fat32_driver_state.dir_table_buf, request.parent_cluster_number, 1);
     uint8_t code = 2;
