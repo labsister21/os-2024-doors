@@ -6,10 +6,15 @@
 #include <stddef.h>
 #include "header/cpu/interrupt.h"
 
-#define EXT_SCANCODE_UP 0x48
-#define EXT_SCANCODE_DOWN 0x50
-#define EXT_SCANCODE_LEFT 0x4B
-#define EXT_SCANCODE_RIGHT 0x4D
+#define EXT_SCANCODE_UP 0x48 // 72
+#define EXT_SCANCODE_DOWN 0x50 // 80
+#define EXT_SCANCODE_LEFT 0x4B // 75
+#define EXT_SCANCODE_RIGHT 0x4D // 77
+
+#define ARROW_UP 0x11
+#define ARROW_LEFT 0x12
+#define ARROW_DOWN 0x13
+#define ARROW_RIGHT 0x14
 
 #define KEYBOARD_DATA_PORT 0x60
 #define EXTENDED_SCANCODE_BYTE 0xE0

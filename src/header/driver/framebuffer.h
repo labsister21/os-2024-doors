@@ -9,19 +9,28 @@
 #define CURSOR_PORT_CMD 0x03D4
 #define CURSOR_PORT_DATA 0x03D5
 
-struct PositionBuffer {
-    uint8_t row;
-    uint8_t col;
-};
+#define BUFFER_HEIGHT_VIEW 25
+#define BUFFER_WIDTH_VIEW 80
+#define BUFFER_MAX_HEIGHT 10000
 
-struct NewLineTable {
-    uint16_t size;
-    struct PositionBuffer table[80*25];
-};
+struct LineBuffer {
+    uint8_t size;
+    char line_buf[BUFFER_WIDTH_VIEW];
+} __attribute((packed));
+
+struct FrameBuffer {
+    int size;
+    struct LineBuffer buffer[1000];
+}__attribute((packed));
 
 extern struct NewLineTable new_line_table;
 
-void init_new_line_table();
+extern struct FrameBuffer frame_buffer;
+
+extern int cursor_row, cursor_col, frame_row_pointer;
+extern char c;
+
+void init_frame_buffer();
 
 /**
  * Terminal framebuffer
@@ -41,7 +50,7 @@ void init_new_line_table();
  * @param fg  Foreground / Character color
  * @param bg  Background color
  */
-void framebuffer_write(uint8_t row, uint8_t col, char c, uint8_t fg, uint8_t bg);
+void framebuffer_write(char c, uint8_t fg, uint8_t bg);
 
 /**
  * Set cursor to specified location. Row and column starts from 0
@@ -57,10 +66,16 @@ void framebuffer_set_cursor(uint8_t r, uint8_t c);
  * Extra note: It's allowed to use different color palette for this
  *
  */
+void new_frame_buffer_view(uint8_t fg, uint16_t bg, bool change);
+
 void framebuffer_clear(void);
+
+void init_keyboard_state(void);
+
+void print(int row, int col);
 
 void framebuffer_erase(int *row, int * col);
 
-void typing_keyboard(int * row, int * col, char c);
+void typing_keyboard();
 
 #endif

@@ -63,8 +63,15 @@ void keyboard_isr(void)
         if (!(scancode & 0x80)) {      
             if (scancode == 0x3A) {
                 keyboard_state.capslock = !keyboard_state.capslock;
-            }
-            else {
+            } else if (scancode == EXT_SCANCODE_UP) {
+                keyboard_state.keyboard_buffer = ARROW_UP;
+            } else if (scancode == EXT_SCANCODE_LEFT) {
+                keyboard_state.keyboard_buffer = ARROW_LEFT;
+            } else if (scancode == EXT_SCANCODE_DOWN) {
+                keyboard_state.keyboard_buffer = ARROW_DOWN;
+            } else if (scancode == EXT_SCANCODE_RIGHT) {
+                keyboard_state.keyboard_buffer = ARROW_RIGHT;
+            } else {
                 char mapped_ascii = keyboard_scancode_1_to_ascii_map[scancode];
                 if (keyboard_state.capslock && 97 <= mapped_ascii && mapped_ascii <= 122) {
                     mapped_ascii -= 32;
