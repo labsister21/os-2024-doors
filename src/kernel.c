@@ -33,6 +33,9 @@ void kernel_setup(void)
     load_gdt(&_gdt_gdtr);
     pic_remap();
     activate_keyboard_interrupt();
+
+    // init_new_line_table();
+    init_keyboard_state();
     initialize_idt();
     framebuffer_clear();
     framebuffer_set_cursor(0, 0);
@@ -42,21 +45,22 @@ void kernel_setup(void)
     // write_blocks(&b, 17, 1);
     initialize_filesystem_fat32();
     struct FAT32DriverRequest req;
-    char * c = "kano";
-    memcpy(req.name, c, sizeof(c));
+    char * cc = "kano";
+    memcpy(req.name, cc, sizeof(cc));
     req.parent_cluster_number = 2;
-    req.buffer_size = 10000;
+    req.buffer_size = 8000;
     read(req);
-    int idx = 0;
+    // int idx = 0;
+    uint16_t i;
     uint8_t * tt = (uint8_t *)req.buf;
-    for (int i = 0; i < 25; i++) {
-        for (int j = 0; j < 80; j++) {
-            char t = (char)tt[idx];
-            framebuffer_write(i, j, t, 0xF, 0);
-            idx++;
-        }
+    for (i = 0; i < req.buffer_size; i++) {
+      char t = (char)tt[i];
+      framebuffer_write(t, 0xF, 0);
     }
-    // framebuffer_write(1, 3, res + '0', 0xF, 0);
-    while (true)
-        ;
+    print(frame_buffer.size, frame_buffer.size);
+    while (true) {
+      get_keyboard_buffer(&c);
+      typing_keyboard();
+    }
+    keyboard_state_deactivate();
 }
