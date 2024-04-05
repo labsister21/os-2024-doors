@@ -166,74 +166,33 @@ void print(int row, int col) {
 
 void typing_keyboard() {
     if (c){
-      if (cursor_row + frame_row_pointer < BUFFER_MAX_HEIGHT){
-        if (c == '\n') {
-          framebuffer_write(c, 0xF, 0);
-        } else if (c != '\b') {
-          switch (c)
-          {
-          case ARROW_UP:
-            if (cursor_row + frame_row_pointer > 0) {
-              cursor_row--;
-              cursor_col = cursor_col < frame_buffer.buffer[cursor_row+frame_row_pointer].size ? cursor_col : frame_buffer.buffer[cursor_row+frame_row_pointer].size;
-              new_frame_buffer_view(0xF, 0, false);
-              // print(frame_buffer.size, frame_buffer.size);
-            }
-            break;
-          case ARROW_LEFT:
-            cursor_col--;
-            if (cursor_col < 0) {
-              if (cursor_row + frame_row_pointer > 0) {
-                cursor_row--;
-                cursor_col = frame_buffer.buffer[cursor_row+frame_row_pointer].size;
-                new_frame_buffer_view(0xF, 0, false);
-              } else {
-                cursor_col++;
-              }
-            }
-            break;
-          case ARROW_DOWN:
-            if (cursor_row + frame_row_pointer < frame_buffer.size-1){
-              cursor_row++;
-              cursor_col = cursor_col < frame_buffer.buffer[cursor_row+frame_row_pointer].size ? cursor_col : frame_buffer.buffer[cursor_row+frame_row_pointer].size;
-              new_frame_buffer_view(0xF, 0, false);
-            }
-            break;
-          case ARROW_RIGHT:
-            cursor_col++;
-            if (cursor_col > frame_buffer.buffer[cursor_row+frame_row_pointer].size && cursor_row + frame_row_pointer < frame_buffer.size-1) {
-              cursor_col = 0;
-              cursor_row++;
-              new_frame_buffer_view(0xF, 0, false);
-            } else if (cursor_col > frame_buffer.buffer[cursor_row+frame_row_pointer].size && cursor_row + frame_row_pointer >= frame_buffer.size-1){
-              cursor_col--;
-            }
-            break;
-          default:
-            framebuffer_write(c, 0xF, 0);
-            break;
+      if (c != '\b') {
+        if (c != '\n') {
+          framebuffer_write(*row, *col, c, 0xF, 0);
+          (*col)++;
+          (*row) += (*col)/80;
+          (*col) %= 80;
+          framebuffer_set_cursor(*row, *col);
+        } else {
+          if (*col != 79) {
+            new_line_table.table[new_line_table.size].row = (uint8_t) (*row);
+            new_line_table.table[new_line_table.size].col = (uint8_t) (*col);
+            new_line_table.size++;
           }
-        } else if (c == '\b') {
-          if (cursor_col > 0 || cursor_row + frame_row_pointer > 0) {
-            if (cursor_col == 0) {
-              if (frame_buffer.buffer[cursor_row+frame_row_pointer].size == 0 && cursor_row == frame_buffer.size-1) {
-                frame_buffer.size--;
-              }
-              if (frame_buffer.buffer[cursor_row + frame_row_pointer-1].size >= 80) {
-                frame_buffer.buffer[cursor_row + frame_row_pointer-1].size--;
-                framebuffer_erase(&cursor_row, &cursor_col);
-              } else {
-                cursor_row--;
-                new_frame_buffer_view(0xF, 0, true);
-              }
-              cursor_col = frame_buffer.buffer[cursor_row + frame_row_pointer].size;
-            } else {
-              framebuffer_erase(&cursor_row, &cursor_col);
-              frame_buffer.buffer[cursor_row+frame_row_pointer].size--;
-            }
-          }
+          (*col) = 0;
+          (*row) ++;
+          framebuffer_set_cursor(*row, *col);
+        }
+      } else if (*col > 0 || *row > 0) {
+        if (*col == 0 && new_line_table.size > 0) {
+          (*row)--;
+          (*col) = new_line_table.table[new_line_table.size-1].col;
+          new_line_table.size--;
+          framebuffer_set_cursor(*row, *col);
+        } else {
+          framebuffer_erase(row, col);
+          framebuffer_set_cursor(*row, *col);
         }
       }
-      framebuffer_set_cursor(cursor_row, cursor_col);
     }
 }
