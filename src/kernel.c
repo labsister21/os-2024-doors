@@ -20,25 +20,23 @@ void kernel_setup(void)
     framebuffer_clear();
     framebuffer_set_cursor(0, 0);
     initialize_filesystem_fat32();
-    // uint8_t arr[] = "halo nama saya adalah nino nakano";
-    // struct FAT32DriverRequest req={
-    //   .buf = arr,
-    //   .name="testf1",
-    //   .ext="txt",
-    //   .parent_cluster_number=ROOT_CLUSTER_NUMBER,
-    //   .buffer_size = sizeof(arr) - 1
-    // };
-    // framebuffer_write(write(req)+'0',0xF,0);
-    // struct FAT32DriverRequest reqDelete={
-    //   .buf = NULL,
-    //   .name="malas",
-    //   .ext="",
-    //   .parent_cluster_number=ROOT_CLUSTER_NUMBER,
-    //   .buffer_size = 0
-    // };
-    // framebuffer_write(write(reqDelete) + '0', 0xF, 0);
-    char *lo = "..";
-    framebuffer_write((char)(sizeof(lo) + '0'), 0xF, 0);
+    uint8_t arr[] = "halo nama saya adalah nino nakano";
+    struct FAT32DriverRequest req={
+      .buf = arr,
+      .name="testf1",
+      .ext="txt",
+      .parent_cluster_number=ROOT_CLUSTER_NUMBER,
+      .buffer_size = sizeof(arr) - 1
+    };
+    framebuffer_write(write(req)+'0',0xF,0);
+    struct FAT32DriverRequest reqDelete={
+      .buf = NULL,
+      .name="malas",
+      .ext="",
+      .parent_cluster_number=ROOT_CLUSTER_NUMBER,
+      .buffer_size = 0
+    };
+    framebuffer_write(write(reqDelete) + '0', 0xF, 0);
     while (true) {
       get_keyboard_buffer(&c);
       typing_keyboard();
