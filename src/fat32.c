@@ -216,7 +216,7 @@ int8_t read(struct FAT32DriverRequest request)
 int8_t write(struct FAT32DriverRequest request)
 {
     // validation
-    if (request.parent_cluster_number != FAT32_FAT_END_OF_FILE)
+    if (fat32_driver_state.fat_table.cluster_map[request.parent_cluster_number] != FAT32_FAT_END_OF_FILE)
         return 2;
 
     // read data from parent folder
@@ -292,7 +292,7 @@ int8_t write(struct FAT32DriverRequest request)
 
 int8_t delete(struct FAT32DriverRequest request)
 {
-    if (request.parent_cluster_number != FAT32_FAT_END_OF_FILE)
+    if (fat32_driver_state.fat_table.cluster_map[request.parent_cluster_number] != FAT32_FAT_END_OF_FILE)
         return -1;
 
     read_clusters(&fat32_driver_state.dir_table_buf, request.parent_cluster_number, 1);

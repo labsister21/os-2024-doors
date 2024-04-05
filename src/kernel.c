@@ -12,52 +12,43 @@
 
 void kernel_setup(void)
 {
-    // JANGAN HAPUS YANG INI DAHULU //
-    //   load_gdt(&_gdt_gdtr);
-    //   pic_remap();
-    //   initialize_idt();
-    //   activate_keyboard_interrupt();
-    //   framebuffer_clear();
-    //   framebuffer_set_cursor(0, 0);
-    //   keyboard_state_activate();
-    //   int col = 0;
-    //   int row = 0;
-    //   init_new_line_table();
-    //   while (true)
-    //   {
-    //     char c;
-    //     get_keyboard_buffer(&c);
-    //     typing_keyboard(&row, &col, c);
-    //   }
-    //   keyboard_state_deactivate();
     load_gdt(&_gdt_gdtr);
     pic_remap();
     activate_keyboard_interrupt();
-
-    // init_new_line_table();
     init_keyboard_state();
     initialize_idt();
     framebuffer_clear();
     framebuffer_set_cursor(0, 0);
-    // struct BlockBuffer b;
-    // for (int i = 0; i < 512; i++)
-    //     b.buf[i] = i % 16;
-    // write_blocks(&b, 17, 1);
     initialize_filesystem_fat32();
-    struct FAT32DriverRequest req;
-    char * cc = "kano";
-    memcpy(req.name, cc, sizeof(cc));
-    req.parent_cluster_number = 2;
-    req.buffer_size = 8000;
-    read(req);
-    // int idx = 0;
-    uint16_t i;
-    uint8_t * tt = (uint8_t *)req.buf;
-    for (i = 0; i < req.buffer_size; i++) {
-      char t = (char)tt[i];
-      framebuffer_write(t, 0xF, 0);
-    }
-    print(frame_buffer.size, frame_buffer.size);
+    uint8_t arr[] = "kontolllll";
+    struct FAT32DriverRequest req={
+      .buf = arr,
+      .name="filebuat",
+      .ext="",
+      .parent_cluster_number=ROOT_CLUSTER_NUMBER,
+      .buffer_size = CLUSTER_SIZE
+    };
+    framebuffer_write(write(req)+'0',0xF,0);
+    struct FAT32DriverRequest reqDelete={
+      .buf = NULL,
+      .name="filebuat",
+      .ext="",
+      .parent_cluster_number=ROOT_CLUSTER_NUMBER,
+      .buffer_size = 0
+    };
+    framebuffer_write(delete(reqDelete)+'0',0xF,0);
+    // char * cc = "pepek";
+    // memcpy(req.name, cc, sizeof(cc));
+    // req.parent_cluster_number = 2;
+    // req.buffer_size = 8000;
+    // read(req);
+    // uint16_t i;
+    // uint8_t * tt = (uint8_t *)req.buf;
+    // for (i = 0; i < req.buffer_size; i++) {
+    //   char t = (char)tt[i];
+    //   framebuffer_write(t, 0xF, 0);
+    // }
+    // print(frame_buffer.size, frame_buffer.size);
     while (true) {
       get_keyboard_buffer(&c);
       typing_keyboard();
