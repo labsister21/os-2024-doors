@@ -30,20 +30,24 @@ void framebuffer_set_cursor(uint8_t r, uint8_t c)
 }
 
 void new_frame_buffer_view(uint8_t fg, uint16_t bg, bool change) {
-  if ((cursor_row < 0 || cursor_row >= BUFFER_HEIGHT_VIEW-1) || change) {
+  if ((cursor_row < 0 || cursor_row >= BUFFER_HEIGHT_VIEW) || change) {
     if (cursor_row < 0) {
       frame_row_pointer--;
       cursor_row = 0;
-    } else if (cursor_row >= BUFFER_HEIGHT_VIEW-1){
+    } else if (cursor_row >= BUFFER_HEIGHT_VIEW){
       frame_row_pointer++;
       cursor_row = BUFFER_HEIGHT_VIEW-1;
     }
-    uint8_t row = (uint8_t)(frame_buffer.size-frame_row_pointer < 25 ? frame_buffer.size-frame_row_pointer : 25);
+    uint8_t row = (uint8_t) (frame_buffer.size-frame_row_pointer);
+    if (row > 25) {
+      row = 25;
+    }
     framebuffer_clear();
     uint8_t attr = (bg << 4) | (fg);
     for (uint8_t i = 0; i < row; i++) {
       uint8_t col = frame_buffer.buffer[i+frame_row_pointer].size;
       for (uint8_t j = 0; j < col ; j++) {
+        if (j > 79) continue;
         FRAMEBUFFER_MEMORY_OFFSET[i*160 + j*2] = frame_buffer.buffer[frame_row_pointer+i].line_buf[j];
         FRAMEBUFFER_MEMORY_OFFSET[i*160 + j*2 + 1] = attr;
       }
@@ -62,9 +66,9 @@ void framebuffer_write(char c, uint8_t fg, uint8_t bg)
           if (cursor_row < frame_buffer.size) {
             new_frame_buffer_view(fg, bg, true);
           } else {
-            frame_buffer.size++;
+            frame_buffer.size = frame_buffer.size + 1;
           }
-          new_frame_buffer_view(fg, bg, false);
+          new_frame_buffer_view(fg, bg, true);
           cursor_col = 0;
         }
       } else if (c != 0x0d) {
@@ -72,12 +76,13 @@ void framebuffer_write(char c, uint8_t fg, uint8_t bg)
             uint8_t attr = (bg << 4) | (fg);
             FRAMEBUFFER_MEMORY_OFFSET[cursor_row * 160 + cursor_col * 2] = c;
             FRAMEBUFFER_MEMORY_OFFSET[cursor_row * 160 + cursor_col * 2 + 1] = attr;
-            frame_buffer.buffer[frame_row_pointer+cursor_row].line_buf[cursor_col++] = c;
-            if (cursor_col > frame_buffer.buffer[frame_row_pointer+cursor_row].size) {
-              frame_buffer.buffer[frame_row_pointer+cursor_row].size = cursor_col;
+            frame_buffer.buffer[frame_row_pointer+cursor_row].line_buf[cursor_col] = c;
+            if (cursor_col+1 > frame_buffer.buffer[frame_row_pointer+cursor_row].size) {
+              frame_buffer.buffer[frame_row_pointer+cursor_row].size = cursor_col+1;
             }
+            cursor_col++;
             if (cursor_col >= BUFFER_WIDTH_VIEW) {
-              frame_buffer.size++;
+              frame_buffer.size = frame_buffer.size + 1;
               cursor_row++;
               cursor_col = 0;
             }
@@ -172,6 +177,7 @@ void typing_keyboard() {
               cursor_row--;
               cursor_col = cursor_col < frame_buffer.buffer[cursor_row+frame_row_pointer].size ? cursor_col : frame_buffer.buffer[cursor_row+frame_row_pointer].size;
               new_frame_buffer_view(0xF, 0, false);
+              // print(frame_buffer.size, frame_buffer.size);
             }
             break;
           case ARROW_LEFT:
@@ -218,6 +224,7 @@ void typing_keyboard() {
                 framebuffer_erase(&cursor_row, &cursor_col);
               } else {
                 cursor_row--;
+                new_frame_buffer_view(0xF, 0, true);
               }
               cursor_col = frame_buffer.buffer[cursor_row + frame_row_pointer].size;
             } else {

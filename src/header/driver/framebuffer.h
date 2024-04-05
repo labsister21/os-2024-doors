@@ -11,19 +11,17 @@
 
 #define BUFFER_HEIGHT_VIEW 25
 #define BUFFER_WIDTH_VIEW 80
-#define BUFFER_MAX_HEIGHT 10000
+#define BUFFER_MAX_HEIGHT 4096
 
 struct LineBuffer {
     uint8_t size;
-    char line_buf[BUFFER_WIDTH_VIEW];
+    uint8_t line_buf[BUFFER_WIDTH_VIEW];
 } __attribute((packed));
 
 struct FrameBuffer {
     int size;
-    struct LineBuffer buffer[1000];
+    struct LineBuffer buffer[BUFFER_MAX_HEIGHT];
 }__attribute((packed));
-
-extern struct NewLineTable new_line_table;
 
 extern struct FrameBuffer frame_buffer;
 

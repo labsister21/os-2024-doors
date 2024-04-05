@@ -44,23 +44,20 @@ void kernel_setup(void)
     //     b.buf[i] = i % 16;
     // write_blocks(&b, 17, 1);
     initialize_filesystem_fat32();
-    // struct FAT32DriverRequest req;
-    // char * cc = "kano";
-    // memcpy(req.name, cc, sizeof(cc));
-    // req.parent_cluster_number = 2;
-    // req.buffer_size = 5120;
-    // read(req);
+    struct FAT32DriverRequest req;
+    char * cc = "kano";
+    memcpy(req.name, cc, sizeof(cc));
+    req.parent_cluster_number = 2;
+    req.buffer_size = 8000;
+    read(req);
     // int idx = 0;
-    // int i;
-    // uint8_t * tt = (uint8_t *)req.buf;
-    // for (i = 0; i < 25; i++) {
-    //     for (int j = 0; j < 80; j++) {
-    //         char t = (char)tt[idx];
-    //         framebuffer_write(t, 0xF, 0);
-    //         idx++;
-    //     }
-    // }
-    // print((int)frame_buffer.size);
+    uint16_t i;
+    uint8_t * tt = (uint8_t *)req.buf;
+    for (i = 0; i < req.buffer_size; i++) {
+      char t = (char)tt[i];
+      framebuffer_write(t, 0xF, 0);
+    }
+    print(frame_buffer.size, frame_buffer.size);
     while (true) {
       get_keyboard_buffer(&c);
       typing_keyboard();
