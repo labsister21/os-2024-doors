@@ -63,7 +63,7 @@ void framebuffer_write(char c, uint8_t fg, uint8_t bg)
         if (frame_row_pointer+cursor_row < BUFFER_MAX_HEIGHT-1) {
           cursor_row ++;
           frame_buffer.buffer[frame_row_pointer+cursor_row].size = 0;
-          if (cursor_row < frame_buffer.size) {
+          if (cursor_row+frame_row_pointer < frame_buffer.size) {
             new_frame_buffer_view(fg, bg, true);
           } else {
             frame_buffer.size = frame_buffer.size + 1;
