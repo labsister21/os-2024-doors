@@ -10,7 +10,7 @@
 #define CURSOR_PORT_DATA 0x03D5
 
 #define BUFFER_HEIGHT_VIEW 25
-#define BUFFER_WIDTH_VIEW 80
+#define BUFFER_WIDTH_VIEW 79
 #define BUFFER_MAX_HEIGHT 4096
 
 struct LineBuffer {

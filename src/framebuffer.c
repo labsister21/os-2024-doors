@@ -72,7 +72,7 @@ void framebuffer_write(char c, uint8_t fg, uint8_t bg)
           cursor_col = 0;
         }
       } else if (c != 0x0d) {
-        if (cursor_col+1 < 80 || cursor_row + frame_row_pointer < BUFFER_MAX_HEIGHT - 1) {
+        if (cursor_col+1 < BUFFER_WIDTH_VIEW || cursor_row + frame_row_pointer < BUFFER_MAX_HEIGHT - 1) {
             uint8_t attr = (bg << 4) | (fg);
             FRAMEBUFFER_MEMORY_OFFSET[cursor_row * 160 + cursor_col * 2] = c;
             FRAMEBUFFER_MEMORY_OFFSET[cursor_row * 160 + cursor_col * 2 + 1] = attr;
@@ -177,7 +177,6 @@ void typing_keyboard() {
               cursor_row--;
               cursor_col = cursor_col < frame_buffer.buffer[cursor_row+frame_row_pointer].size ? cursor_col : frame_buffer.buffer[cursor_row+frame_row_pointer].size;
               new_frame_buffer_view(0xF, 0, false);
-              // print(frame_buffer.size, frame_buffer.size);
             }
             break;
           case ARROW_LEFT:
@@ -216,10 +215,10 @@ void typing_keyboard() {
         } else if (c == '\b') {
           if (cursor_col > 0 || cursor_row + frame_row_pointer > 0) {
             if (cursor_col == 0) {
-              if (frame_buffer.buffer[cursor_row+frame_row_pointer].size == 0 && cursor_row == frame_buffer.size-1) {
+              if (frame_buffer.buffer[cursor_row+frame_row_pointer].size == 0 && cursor_row+frame_row_pointer == frame_buffer.size-1) {
                 frame_buffer.size--;
               }
-              if (frame_buffer.buffer[cursor_row + frame_row_pointer-1].size >= 80) {
+              if (frame_buffer.buffer[cursor_row + frame_row_pointer-1].size >= BUFFER_WIDTH_VIEW) {
                 frame_buffer.buffer[cursor_row + frame_row_pointer-1].size--;
                 framebuffer_erase(&cursor_row, &cursor_col);
               } else {
