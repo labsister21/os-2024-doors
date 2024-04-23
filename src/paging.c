@@ -99,16 +99,6 @@ bool paging_allocate_user_page_frame(struct PageDirectory *page_dir, void *virtu
 bool paging_free_user_page_frame(struct PageDirectory *page_dir, void *virtual_addr)
 {
     /*
-     * TODO: Deallocate a physical frame from respective virtual address
-     * - Use the page_dir.table values to check mapped physical frame
-     * - Remove the entry by setting it into 0
-     */
-    page_dir->table return true;
-}
-
-bool paging_free_user_page_frame(struct PageDirectory *page_dir, void *virtual_addr)
-{
-    /*
      * Deallocate a physical frame from respective virtual address
      * - Use the page_dir.table values to check mapped physical frame
      * - Remove the entry by setting it into 0
