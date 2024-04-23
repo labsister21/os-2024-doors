@@ -21,12 +21,24 @@ extern struct PageDirectory _paging_kernel_page_directory;
  * Page Directory Entry Flag, only first 8 bit
  *
  * @param present_bit       Indicate whether this entry is exist or not
- * ...
+ * @param write_bit read/write
+ * @param user_supervisor
+ * @param write_through
+ * @param cache_disable
+ * @param accessed
+ * @param dirty
+ * @param use_pagesize_4_mb
  */
 struct PageDirectoryEntryFlag
 {
     uint8_t present_bit : 1;
-    // TODO : Continue. Note: Only 8-bit flags
+    uint16_t write_bit : 1;
+    uint16_t user_supervisor : 1;
+    uint16_t write_through : 1;
+    uint16_t cache_disable : 1;
+    uint16_t accessed : 1;
+    uint16_t dirty : 1;
+    uint16_t use_pagesize_4_mb : 1;
 } __attribute__((packed));
 
 /**
@@ -35,7 +47,9 @@ struct PageDirectoryEntryFlag
  *
  * @param flag            Contain 8-bit page directory entry flag
  * @param global_page     Is this page translation global & cannot be flushed?
- * ...
+ * @param available
+ * @param higher_address
+ * @param pat               Page Attribute Table
  * @param reserved_2      Reserved bit (1-bit)
  * @param lower_address   10-bit page frame lower address, note directly correspond with 4 MiB memory (= 0x40 0000 = 1
  * Note:
@@ -46,7 +60,11 @@ struct PageDirectoryEntry
 {
     struct PageDirectoryEntryFlag flag;
     uint16_t global_page : 1;
-    // TODO : Continue, Use uint16_t + bitfield here, Do not use uint8_t
+    uint16_t available : 3;
+    uint16_t pat : 1;
+    uint16_t higher_address : 8;
+    uint16_t reserved_2 : 1;
+    uint16_t lower_address : 10;
 } __attribute__((packed));
 
 /**
@@ -61,14 +79,14 @@ struct PageDirectoryEntry
  */
 struct PageDirectory
 {
-    // TODO : Implement
-} __attribute__((packed));
+    struct PageDirectoryEntry table[PAGE_ENTRY_COUNT];
+} __attribute__((aligned(0x1000)));
 
 /**
  * Containing page manager states.
  *
  * @param page_frame_map Keeping track empty space. True when the page frame is currently used
- * ...
+ * @param free_page_frame_count
  */
 struct PageManagerState
 {
