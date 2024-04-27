@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#define FRAMEBUFFER_MEMORY_OFFSET ((uint8_t *)0xB8000)
+#define FRAMEBUFFER_MEMORY_OFFSET ((uint8_t *)0xC00B8000)
 #define CURSOR_PORT_CMD 0x03D4
 #define CURSOR_PORT_DATA 0x03D5
 
@@ -13,15 +13,17 @@
 #define BUFFER_WIDTH_VIEW 79
 #define BUFFER_MAX_HEIGHT 4096
 
-struct LineBuffer {
+struct LineBuffer
+{
     uint8_t size;
     uint8_t line_buf[BUFFER_WIDTH_VIEW];
 } __attribute((packed));
 
-struct FrameBuffer {
+struct FrameBuffer
+{
     int size;
     struct LineBuffer buffer[BUFFER_MAX_HEIGHT];
-}__attribute((packed));
+} __attribute((packed));
 
 extern struct FrameBuffer frame_buffer;
 
@@ -72,7 +74,7 @@ void init_keyboard_state(void);
 
 void print(int row, int col);
 
-void framebuffer_erase(int *row, int * col);
+void framebuffer_erase(int *row, int *col);
 
 void typing_keyboard();
 
