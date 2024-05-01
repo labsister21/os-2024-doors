@@ -98,7 +98,7 @@ uint32_t cluster_to_lba(uint32_t cluster)
 
 void init_directory_table(struct FAT32DirectoryTable *dir_table, char *name, uint32_t parent_dir_cluster)
 {
-    char * c = "..";
+    char *c = "..";
     memcpy(dir_table->table[0].name, name, 8);
     memcpy(dir_table->table[1].name, c, 2);
     dir_table->table[1].cluster_low = (uint16_t)parent_dir_cluster;
@@ -106,7 +106,8 @@ void init_directory_table(struct FAT32DirectoryTable *dir_table, char *name, uin
     dir_table->table[1].attribute = ATTR_SUBDIRECTORY;
     dir_table->table[0].attribute = ATTR_SUBDIRECTORY;
 
-    for (unsigned i = 2; i < CLUSTER_SIZE / sizeof(struct FAT32DirectoryEntry); i++) {
+    for (unsigned i = 2; i < CLUSTER_SIZE / sizeof(struct FAT32DirectoryEntry); i++)
+    {
         memset(&dir_table->table[i], 0, sizeof(struct FAT32DirectoryEntry));
     }
 }
@@ -311,7 +312,7 @@ int8_t delete(struct FAT32DriverRequest request)
         if (memcmp(fat32_driver_state.dir_table_buf.table[i].name, request.name, 8) == 0 && memcmp(fat32_driver_state.dir_table_buf.table[i].ext, request.ext, 3) == 0)
         {
             uint32_t cluster_number = (fat32_driver_state.dir_table_buf.table[i].cluster_high << 16) | fat32_driver_state.dir_table_buf.table[i].cluster_low;
-     
+
             // if delete folder
             if (fat32_driver_state.dir_table_buf.table[i].attribute & ATTR_SUBDIRECTORY)
             {
