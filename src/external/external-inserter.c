@@ -1,29 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
-// Usual gcc fixed width integer type
-typedef u_int32_t uint32_t;
-typedef u_int8_t uint8_t;
-
-// Manual import from fat32.h, disk.h, & stdmem.h due some issue with size_t
-#define BLOCK_SIZE 512
-
-struct FAT32DriverRequest
-{
-    void *buf;
-    char name[8];
-    char ext[3];
-    uint32_t parent_cluster_number;
-    uint32_t buffer_size;
-} __attribute__((packed));
-
-void *memcpy(void *restrict dest, const void *restrict src, uint32_t n);
-
-void initialize_filesystem_fat32(void);
-int8_t read(struct FAT32DriverRequest request);
-int8_t read_directory(struct FAT32DriverRequest request);
-int8_t write(struct FAT32DriverRequest request);
-int8_t delete(struct FAT32DriverRequest request);
+#include "header/filesystem/fat32.h"
+#include "header/driver/disk.h"
+#include "header/stdlib/string.h"
 
 // Global variable
 uint8_t *image_storage;
@@ -32,13 +13,23 @@ uint8_t *file_buffer;
 void read_blocks(void *ptr, uint32_t logical_block_address, uint8_t block_count)
 {
     for (int i = 0; i < block_count; i++)
-        memcpy((uint8_t *)ptr + BLOCK_SIZE * i, image_storage + BLOCK_SIZE * (logical_block_address + i), BLOCK_SIZE);
+    {
+        memcpy(
+            (uint8_t *)ptr + BLOCK_SIZE * i,
+            image_storage + BLOCK_SIZE * (logical_block_address + i),
+            BLOCK_SIZE);
+    }
 }
 
 void write_blocks(const void *ptr, uint32_t logical_block_address, uint8_t block_count)
 {
     for (int i = 0; i < block_count; i++)
-        memcpy(image_storage + BLOCK_SIZE * (logical_block_address + i), (uint8_t *)ptr + BLOCK_SIZE * i, BLOCK_SIZE);
+    {
+        memcpy(
+            image_storage + BLOCK_SIZE * (logical_block_address + i),
+            (uint8_t *)ptr + BLOCK_SIZE * i,
+            BLOCK_SIZE);
+    }
 }
 
 int main(int argc, char *argv[])
@@ -58,7 +49,7 @@ int main(int argc, char *argv[])
 
     // Read target file, assuming file is less than 4 MiB
     FILE *fptr_target = fopen(argv[1], "r");
-    uint32_t filesize = 0;
+    size_t filesize = 0;
     if (fptr_target == NULL)
         filesize = 0;
     else
@@ -70,7 +61,7 @@ int main(int argc, char *argv[])
     }
 
     printf("Filename : %s\n", argv[1]);
-    printf("Filesize : %u bytes\n", filesize);
+    printf("Filesize : %ld bytes\n", filesize);
 
     // FAT32 operations
     initialize_filesystem_fat32();
@@ -82,14 +73,20 @@ int main(int argc, char *argv[])
     sscanf(argv[2], "%u", &request.parent_cluster_number);
     sscanf(argv[1], "%8s", request.name);
     int retcode = write(request);
-    if (retcode == 0)
+    switch (retcode)
+    {
+    case 0:
         puts("Write success");
-    else if (retcode == 1)
+        break;
+    case 1:
         puts("Error: File/folder name already exist");
-    else if (retcode == 2)
+        break;
+    case 2:
         puts("Error: Invalid parent cluster");
-    else
+        break;
+    default:
         puts("Error: Unknown error");
+    }
 
     // Write image in memory into original, overwrite them
     fptr = fopen(argv[3], "w");
