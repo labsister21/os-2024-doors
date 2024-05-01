@@ -15,7 +15,7 @@
 
 #define GDT_USER_CODE_SEGMENT_SELECTOR 0x18
 #define GDT_USER_DATA_SEGMENT_SELECTOR 0x20
-#define GDT_TSS_SELECTOR               0x28
+#define GDT_TSS_SELECTOR 0x28
 
 extern struct GDTR _gdt_gdtr;
 
