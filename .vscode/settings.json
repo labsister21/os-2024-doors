@@ -1,3 +1,16 @@
 {
     "debug.onTaskErrors": "debugAnyway",
+    "files.associations": {
+        "*.ejs": "html",
+        "*.h": "c",
+        "*.c": "c",
+        "gdt.h": "c",
+        "stdint.h": "c",
+        "stdint-gcc.h": "c",
+        "idt.h": "c",
+        "keyboard.h": "c",
+        "libc-header-start.h": "c",
+        "typeinfo": "c",
+        "random": "c"
+    },
 }
