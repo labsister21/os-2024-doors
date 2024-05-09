@@ -46,6 +46,8 @@ void main_interrupt_handler(struct InterruptFrame frame)
     case (PIC1_OFFSET + IRQ_KEYBOARD):
         keyboard_isr();
         break;
+    case 0x30:
+        syscall(frame);
     }
 }
 
@@ -89,18 +91,15 @@ void syscall(struct InterruptFrame frame)
     case 4:
         get_keyboard_buffer((char *)frame.cpu.general.ebx);
         break;
-
-    /**
-     * TODO: IMPLEMENT PUTCHAR
-     */
     case 5:
+        put_char_color(*((char *)frame.cpu.general.ebx), frame.cpu.general.ecx);
         break;
 
     case 6:
-        // puts(
-        //     (char *)frame.cpu.general.ebx,
-        //     frame.cpu.general.ecx,
-        //     frame.cpu.general.edx); // Assuming puts() exist in kernel
+        puts(
+            (char *)frame.cpu.general.ebx,
+            frame.cpu.general.ecx,
+            frame.cpu.general.edx); // Assuming puts() exist in kernel
         break;
 
     case 7:

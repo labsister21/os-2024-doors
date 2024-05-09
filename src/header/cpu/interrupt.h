@@ -6,8 +6,10 @@
 #include <stddef.h>
 #include "header/cpu/portio.h"
 #include "header/driver/keyboard.h"
+#include "header/driver/framebuffer.h"
 #include "header/cpu/gdt.h"
 #include "header/filesystem/fat32.h"
+#include "../stdlib/string.h"
 
 /* -- PIC constants -- */
 
@@ -177,5 +179,7 @@ struct TSSEntry
 
 // Set kernel stack in TSS
 void set_tss_kernel_current_stack(void);
+
+void syscall(struct InterruptFrame frame);
 
 #endif

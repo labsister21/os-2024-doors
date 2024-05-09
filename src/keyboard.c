@@ -83,3 +83,7 @@ void keyboard_isr(void)
     pic_ack(IRQ_KEYBOARD);
     return;
 }
+
+bool is_keyboard_active() {
+    return keyboard_state.keyboard_input_on;
+}

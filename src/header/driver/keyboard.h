@@ -61,4 +61,6 @@ void get_keyboard_buffer(char *buf);
  */
 void keyboard_isr(void);
 
+bool is_keyboard_active();
+
 #endif
