@@ -101,10 +101,17 @@ void init_directory_table(struct FAT32DirectoryTable *dir_table, char *name, uin
     char *c = "..";
     memcpy(dir_table->table[0].name, name, 8);
     memcpy(dir_table->table[1].name, c, 2);
+
     dir_table->table[1].cluster_low = (uint16_t)parent_dir_cluster;
     dir_table->table[1].cluster_high = (uint16_t)(parent_dir_cluster >> 16);
     dir_table->table[1].attribute = ATTR_SUBDIRECTORY;
+    dir_table->table[1].user_attribute = UATTR_NOT_EMPTY;
+    dir_table->table[1].undelete = false;
+
     dir_table->table[0].attribute = ATTR_SUBDIRECTORY;
+    dir_table->table[0].user_attribute = UATTR_NOT_EMPTY;
+    dir_table->table[0].undelete = false;
+
 
     for (unsigned i = 2; i < CLUSTER_SIZE / sizeof(struct FAT32DirectoryEntry); i++)
     {
@@ -122,15 +129,17 @@ bool is_empty_storage(void)
 void create_fat32(void)
 {
     write_blocks(fs_signature, BOOT_SECTOR, 1);
-    struct FAT32FileAllocationTable fat;
-    fat.cluster_map[0] = CLUSTER_0_VALUE;
-    fat.cluster_map[1] = CLUSTER_1_VALUE;
-    fat.cluster_map[2] = FAT32_FAT_END_OF_FILE;
+
+    fat32_driver_state.fat_table.cluster_map[0] = CLUSTER_0_VALUE;
+    fat32_driver_state.fat_table.cluster_map[1] = CLUSTER_1_VALUE;
+    fat32_driver_state.fat_table.cluster_map[2] = FAT32_FAT_END_OF_FILE;
     for (int i = 3; i < CLUSTER_MAP_SIZE; i++)
     {
-        fat.cluster_map[i] = FAT32_FAT_EMPTY_ENTRY;
+        fat32_driver_state.fat_table.cluster_map[i] = FAT32_FAT_EMPTY_ENTRY;
     }
-    write_blocks(&fat, cluster_to_lba(1), 4);
+    init_directory_table(&fat32_driver_state.dir_table_buf, "root", 2);
+    write_clusters(&fat32_driver_state.dir_table_buf, 2, 1);
+    write_clusters(&fat32_driver_state, 1, 1);
 }
 
 void initialize_filesystem_fat32(void)

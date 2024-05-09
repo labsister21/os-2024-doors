@@ -97,10 +97,10 @@ void syscall(struct InterruptFrame frame)
         break;
 
     case 6:
-        puts(
-            (char *)frame.cpu.general.ebx,
-            frame.cpu.general.ecx,
-            frame.cpu.general.edx); // Assuming puts() exist in kernel
+        // puts(
+        //     (char *)frame.cpu.general.ebx,
+        //     frame.cpu.general.ecx,
+        //     frame.cpu.general.edx); // Assuming puts() exist in kernel
         break;
 
     case 7:
