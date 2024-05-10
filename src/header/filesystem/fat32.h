@@ -231,4 +231,11 @@ int8_t write(struct FAT32DriverRequest request);
  */
 int8_t delete(struct FAT32DriverRequest request);
 
+int8_t search_file(struct FAT32DriverRequest request);
+
+uint32_t get_cluster_number(struct FAT32DriverRequest request);
+
+int8_t copy_folder(uint32_t src_cluster, uint32_t dest_cluster);
+
+int8_t copy_file(struct FAT32DriverRequest src, struct FAT32DriverRequest dest);
 #endif

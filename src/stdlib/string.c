@@ -102,3 +102,19 @@ int strlen(char * str)
     }
     return i;
 }
+
+int contains(char * str, char c, int n)
+{
+    for (int i = 0; i < n; i++)
+    {
+        if (str[i] == '\0')
+        {
+            return 0;
+        }
+        if (str[i] == c)
+        {
+            return 1;
+        }
+    }
+    return 0;
+}

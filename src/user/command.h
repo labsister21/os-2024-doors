@@ -28,4 +28,6 @@ void mkdir(char * name);
 
 void move_back(char *c);
 
+void cp(char * src, char * dest);
+
 #endif

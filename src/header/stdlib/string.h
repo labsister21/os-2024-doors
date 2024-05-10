@@ -60,4 +60,6 @@ void strsplit(char* str, char delim, char result[16][256]);
 
 int strlen(char * str);
 
+int contains(char * str, char c, int n);
+
 #endif

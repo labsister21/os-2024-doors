@@ -69,23 +69,19 @@ void syscall(struct InterruptFrame frame)
     switch (frame.cpu.general.eax)
     {
     case 0:
-        *((int8_t *)frame.cpu.general.ecx) = read(
-            *(struct FAT32DriverRequest *)frame.cpu.general.ebx);
+        *((int8_t *)frame.cpu.general.ecx) = read(*(struct FAT32DriverRequest *)frame.cpu.general.ebx);
         break;
 
     case 1:
-        *((int8_t *)frame.cpu.general.ecx) = read_directory(
-            *(struct FAT32DriverRequest *)frame.cpu.general.ebx);
+        *((int8_t *)frame.cpu.general.ecx) = read_directory(*(struct FAT32DriverRequest *)frame.cpu.general.ebx);
         break;
 
     case 2:
-        *((int8_t *)frame.cpu.general.ecx) = write(
-            *(struct FAT32DriverRequest *)frame.cpu.general.ebx);
+        *((int8_t *)frame.cpu.general.ecx) = write(*(struct FAT32DriverRequest *)frame.cpu.general.ebx);
         break;
 
     case 3:
-        *((int8_t *)frame.cpu.general.ecx) = delete (
-            *(struct FAT32DriverRequest *)frame.cpu.general.ebx);
+        *((int8_t *)frame.cpu.general.ecx) = delete (*(struct FAT32DriverRequest *)frame.cpu.general.ebx);
         break;
 
     case 4:
@@ -94,26 +90,36 @@ void syscall(struct InterruptFrame frame)
     case 5:
         put_char_color(frame.cpu.general.ebx, frame.cpu.general.ecx);
         break;
-
     case 6:
         puts(
             (char *)frame.cpu.general.ebx,
             frame.cpu.general.ecx,
             frame.cpu.general.edx); // Assuming puts() exist in kernel
         break;
-
     case 7:
         keyboard_state_activate();
         break;
     case 8:
         clear_screen();
-        // framebuffer_clear();
         break;
     case 9:
         read_clusters((void *)frame.cpu.general.ebx, frame.cpu.general.ecx, (uint32_t)frame.cpu.general.edx);
         break;
     case 10:
         set_cursor_col(frame.cpu.general.ebx);
+        break;
+    case 11:
+        *((int8_t *)frame.cpu.general.ecx) = search_file(*(struct FAT32DriverRequest *)frame.cpu.general.ebx);
+        break;
+    case 12:
+        *((uint32_t *)frame.cpu.general.ecx) = get_cluster_number(*(struct FAT32DriverRequest *)frame.cpu.general.ebx);
+        break;
+    case 13:
+        *((int8_t *)frame.cpu.general.edx) = copy_folder((uint32_t)frame.cpu.general.ebx, (uint32_t)frame.cpu.general.ecx);
+        break;
+    case 14:
+        *((int8_t *)frame.cpu.general.edx) = copy_file(*(struct FAT32DriverRequest *)frame.cpu.general.ebx, *(struct FAT32DriverRequest *)frame.cpu.general.ecx);
+        break;
     default:
         break;
     }

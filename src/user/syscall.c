@@ -65,3 +65,23 @@ void set_cursor_col(uint32_t col)
 {
     syscall(10, col, 0, 0);
 }
+
+void search_file_api(struct FAT32DriverRequest * req, uint32_t * code)
+{
+    syscall(11, (uint32_t)req, (uint32_t)code, 0);
+}
+
+void get_cluster_number_api(struct FAT32DriverRequest * req, uint32_t * code)
+{
+    syscall(12, (uint32_t)req, (uint32_t)code, 0);
+}
+
+void copy_folder_api(uint32_t src, uint32_t dest, uint32_t * code)
+{
+    syscall(13, src, dest, (uint32_t)code);
+}
+
+void copy_file_api(struct FAT32DriverRequest *src, struct FAT32DriverRequest *dest, uint32_t *code)
+{
+    syscall(14, (uint32_t)src, (uint32_t)dest, (uint32_t)code);
+}

@@ -100,9 +100,26 @@ void run_command()
                 put_chars("Expected directory name", 23, 0xF);
                 put_char('\n', 0xF);
             }
+            else if (strlen(buf[2]) != 0)
+            {
+                put_chars("Too many arguments", 18, 0xF);
+                put_char('\n', 0xF);
+            }
             else
             {
                 mkdir(buf[1]);
+            }
+        }
+        else if (memcmp(cmd, "cp", cmd_len) == 0)
+        {
+            if (strlen(buf[1]) == 0 || strlen(buf[2]) == 0)
+            {
+                put_chars("Expected file/folder names", 26, 0xF);
+                put_char('\n', 0xF);
+            }
+            else
+            {
+                cp(buf[1], buf[2]);
             }
         }
         else
@@ -195,17 +212,33 @@ void cd(char *name)
         put_chars("'", 1, 0xF);
         put_chars(" is not a folder.\n", 18, 0xF);
     }
-    else
+    else if (code == 2)
     {
         put_chars("'", 1, 0xF);
         put_chars(name, strlen(name), 0xF);
         put_chars("'", 1, 0xF);
         put_chars(" is not found.\n", 15, 0xF);
     }
+    else
+    {
+        put_chars("Unexpected error occured.\n", 26, 0xF);
+    }
 }
 
 void mkdir(char *name)
 {
+    if (strlen(name) > 8)
+    {
+        put_chars("The maximum length of folder name is 8 characters.\n", 51, 0xF);
+    }
+    if (contains(name, '.', strlen(name)))
+    {
+        put_chars("'", 1, 0xF);
+        put_chars(name, strlen(name), 0xF);
+        put_chars("'", 1, 0xF);
+        put_chars(" contains '.' which is not allowed.\n", 36, 0xF);
+        return;
+    }
     struct FAT32DirectoryTable table;
     struct FAT32DriverRequest request = {
         .buf = &table,
@@ -254,5 +287,112 @@ void move_back(char *c)
         }
         c[i] = '\0';
         i--;
+    }
+}
+
+void cp(char *src, char *dest)
+{
+    char src_buf[16][256] = {0};
+    strsplit(src, '.', src_buf);
+    char dest_buf[16][256] = {0};
+    strsplit(dest, '.', dest_buf);
+
+    // check source
+    struct FAT32DriverRequest src_req = {
+        .parent_cluster_number = state.work_dir,
+    };
+    memcpy(src_req.name, src_buf[0], 8);
+    memcpy(src_req.ext, src_buf[1], 3);
+
+    uint32_t src_code;
+    search_file_api(&src_req, &src_code);
+
+    // check dest
+    struct FAT32DriverRequest dest_req = {
+        .parent_cluster_number = state.work_dir,
+    };
+    memcpy(dest_req.name, dest_buf[0], 8);
+    memcpy(dest_req.ext, dest_buf[1], 3);
+    uint32_t dest_code;
+    search_file_api(&dest_req, &dest_code);
+
+    uint32_t res;
+    if (src_code == 0 && src_code == dest_code) // handle file copy
+    {
+        copy_file_api(&src_req, &dest_req, &res);
+        if (res == 0)
+        {
+            put_chars("Succesfully copied file ", 23, 0xF);
+            put_chars("'", 1, 0xF);
+            put_chars(src, strlen(src), 0xF);
+            put_chars("'", 1, 0xF);
+            put_chars(" to ", 4, 0xF);
+            put_chars("'", 1, 0xF);
+            put_chars(dest, strlen(dest), 0xF);
+            put_chars("'\n", 2, 0xF);
+        }
+        else
+        {
+            put_chars("Failed to copy file\n", 21, 0xF);
+        }
+    }
+    else if (src_code == 1 && src_code == dest_code) // handle folder copy
+    {
+        uint32_t src_cluster;
+        uint32_t dest_cluster;
+        get_cluster_number_api(&src_req, &src_cluster);
+        get_cluster_number_api(&dest_req, &dest_cluster);
+
+        if (!src_cluster || !dest_cluster)
+        {
+            put_chars("Failed to copy folder\n", 22, 0xF);
+            return;
+        }
+
+        copy_folder_api(src_cluster, dest_cluster, &res);
+        if (res == 0)
+        {
+            put_chars("Succesfully copied folder ", 26, 0xF);
+            put_chars("'", 1, 0xF);
+            put_chars(src, strlen(src), 0xF);
+            put_chars("'", 1, 0xF);
+            put_chars(" to ", 4, 0xF);
+            put_chars("'", 1, 0xF);
+            put_chars(dest, strlen(dest), 0xF);
+            put_chars("'\n", 2, 0xF);
+        }
+        else
+        {
+            put_chars("Failed to copy folder\n", 22, 0xF);
+        }
+    }
+    else if ((src_code == 0 && dest_code == 1) || (src_code == 1 && dest_code == 0)) // handle file
+    {
+        put_chars("'", 1, 0xF);
+        put_chars(src, strlen(src), 0xF);
+        put_chars("'", 1, 0xF);
+        put_chars(" and ", 5, 0xF);
+        put_chars("'", 1, 0xF);
+        put_chars(dest, strlen(dest), 0xF);
+        put_chars("'", 1, 0xF);
+        put_chars(" are of different types.\n", 25, 0xF);
+    }
+    else if (src_code == 2)
+    {
+        put_chars("'", 1, 0xF);
+        put_chars(src, strlen(src), 0xF);
+        put_chars("'", 1, 0xF);
+        put_chars(" is not found.\n", 15, 0xF);
+    }
+    else if (dest_code == 2)
+    {
+        put_chars("'", 1, 0xF);
+        put_chars(dest, strlen(dest), 0xF);
+        put_chars("'", 1, 0xF);
+        put_chars(" is not found.\n", 15, 0xF);
+    }
+    else
+    {
+        put_chars("Unexpected error occured\n", 22, 0xF);
     }
 }
