@@ -58,4 +58,6 @@ void strset(char* str, char c, uint8_t len);
 
 void strsplit(char* str, char delim, char result[16][256]);
 
+int strlen(char * str);
+
 #endif

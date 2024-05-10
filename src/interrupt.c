@@ -107,7 +107,13 @@ void syscall(struct InterruptFrame frame)
         break;
     case 8:
         clear_screen();
+        // framebuffer_clear();
         break;
+    case 9:
+        read_clusters((void *)frame.cpu.general.ebx, frame.cpu.general.ecx, (uint32_t)frame.cpu.general.edx);
+        break;
+    case 10:
+        set_cursor_col(frame.cpu.general.ebx);
     default:
         break;
     }

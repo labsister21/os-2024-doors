@@ -55,3 +55,13 @@ void clear_screen()
 {
     syscall(8, 0, 0, 0);
 }
+
+void read_clusters_api(void * buf, uint32_t cluster_number, uint32_t cluster_size)
+{
+    syscall(9, (uint32_t)buf, cluster_number, cluster_size);
+}
+
+void set_cursor_col(uint32_t col)
+{
+    syscall(10, col, 0, 0);
+}

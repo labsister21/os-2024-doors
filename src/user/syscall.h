@@ -20,10 +20,14 @@ void read_file_api(struct FAT32DriverRequest * req, uint32_t * code);
 
 void read_directory_api(struct FAT32DriverRequest * req, uint32_t * code);
 
+void read_clusters_api(void * buf, uint32_t cluster_number, uint32_t cluster_size);
+
 void write_api(struct FAT32DriverRequest * req, uint32_t * code);
 
 void delete_api(struct FAT32DriverRequest * req, uint32_t * code);
 
 void get_keyboard_char(char * c);
+
+void set_cursor_col(uint32_t col);
 
 #endif

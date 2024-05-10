@@ -52,24 +52,132 @@ void run_command()
     {
         put_char('\n', 0xF);
 
+        char buf[16][256] = {0};
+        strsplit(state.curr_command_buffer, ' ', buf);
+
+        char cmd[256];
+        memcpy(cmd, buf[0], 256);
+
+        int cmd_len = strlen(cmd);
+
         // TODO: implement commands check and run command
-        if (memcmp(state.curr_command_buffer, "ls", state.curr_command_size) == 0)
+        if (memcmp(cmd, "ls", cmd_len) == 0)
         {
-            put_chars("berhasil ls", 11, 0xF);
+            if (strlen(buf[1]) == 0)
+            {
+                ls();
+            }
+            else
+            {
+                put_chars("'", 1, 0xF);
+                put_chars(cmd, cmd_len, 0xF);
+                put_chars("'", 1, 0xF);
+                put_chars(" only receive one argument.", 24, 0xF);
+                put_char('\n', 0xF);
+            }
         }
-        else if (memcmp(state.curr_command_buffer, "cd", state.curr_command_size) == 0)
+        else if (memcmp(cmd, "cd", cmd_len) == 0)
         {
-            put_chars("berhasil cd", 11, 0xF);
+            // cd()
+            if (strlen(buf[1]) == 0)
+            {
+                put_chars("Expected file name", 18, 0xF);
+                put_char('\n', 0xF);
+            }
+            else
+            {
+                cd(buf[1]);
+            }
         }
-        else 
+        else if (memcmp(cmd, "clear", cmd_len) == 0 || memcmp(cmd, "cls", cmd_len) == 0)
+        {
+            clear_screen();
+        }
+        else
         {
             put_chars("'", 1, 0xF);
-            put_chars(state.curr_command_buffer, state.curr_command_size, 0xF);
+            put_chars(cmd, cmd_len, 0xF);
             put_chars("'", 1, 0xF);
             put_chars(" is not recognized as an internal command.", 42, 0xF);
+            put_char('\n', 0xF);
         }
     }
-
-    put_char('\n', 0xF);
+    else
+    {
+        put_char('\n', 0xF);
+    }
     print_working_dir();
+}
+
+void ls()
+{
+    int idx = 0;
+    put_chars("no   name     type\n", 28, 0xF);
+    put_chars("------------------\n", 28, 0xF);
+
+    // get directory table
+    struct FAT32DirectoryTable table;
+    read_clusters_api(&table, state.work_dir, 1);
+
+    for (int i = 2; i < 64; i++)
+    {
+        if (table.table[i].user_attribute == UATTR_NOT_EMPTY)
+        {
+            idx++;
+            put_char('0' + idx, 0xF);
+            set_cursor_col(5);
+
+            char curr_name[8];
+            memcpy(&curr_name, table.table[i].name, 8);
+            put_chars(curr_name, 8, 0xF);
+            set_cursor_col(14);
+
+            if (table.table[i].attribute == ATTR_SUBDIRECTORY)
+            {
+                put_chars("folder", 6, 0xF);
+            }
+            else
+            {
+                put_chars("file", 4, 0xF);
+            }
+
+            put_char('\n', 0xF);
+        }
+    }
+}
+
+void cd(char *name)
+{
+    struct FAT32DirectoryTable table;
+    struct FAT32DriverRequest request = {
+        .buf = &table,
+        .ext = "\0\0\0",
+        .parent_cluster_number = state.work_dir,
+        .buffer_size = CLUSTER_SIZE};
+
+    memcpy(request.name, name, 8);
+
+    uint32_t code;
+    read_directory_api(&request, &code);
+
+    if (code == 0)
+    {
+        strcat(state.work_dir_name, "/");
+        strcat(state.work_dir_name, name);
+        state.work_dir = (table.table[0].cluster_high << 16) | (table.table[0].cluster_low);
+    }
+    else if (code == 1)
+    {
+        put_chars("'", 1, 0xF);
+        put_chars(name, strlen(name), 0xF);
+        put_chars("'", 1, 0xF);
+        put_chars(" is not a folder.\n", 18, 0xF);
+    }
+    else
+    {
+        put_chars("'", 1, 0xF);
+        put_chars(name, strlen(name), 0xF);
+        put_chars("'", 1, 0xF);
+        put_chars(" is not found.\n", 15, 0xF);
+    }
 }

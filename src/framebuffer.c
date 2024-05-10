@@ -42,6 +42,19 @@ void clear_screen()
     cursor_col = 0;
     cursor_row = 0;
     framebuffer_set_cursor(0, 0);
+    for (int i = 0; i < BUFFER_MAX_HEIGHT; i++)
+    {
+        frame_buffer.buffer[i].size = 0;
+        memset(frame_buffer.buffer[i].line_buf, 0, 79);
+        memset(frame_buffer.buffer[i].color_buf, 0, 79);
+    }
+    frame_buffer.size = 0;
+}
+
+void set_cursor_col(uint32_t col)
+{
+    cursor_col = col;
+    framebuffer_set_cursor(cursor_row, cursor_col);
 }
 
 void framebuffer_set_cursor(uint8_t r, uint8_t c)

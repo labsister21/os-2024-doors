@@ -20,4 +20,10 @@ void type_command();
 
 void run_command();
 
+void ls();
+
+void cd(char * name);
+
+void mkdir(char * name);
+
 #endif

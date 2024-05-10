@@ -88,4 +88,6 @@ void puts(const char *str, uint32_t cnt, uint32_t color);
 
 void handle_new_char(char c, uint8_t fg, uint8_t bg);
 
+void set_cursor_col(uint32_t col);
+
 #endif
