@@ -51,9 +51,23 @@ void run_command()
     if (state.curr_command_size)
     {
         put_char('\n', 0xF);
-        
+
         // TODO: implement commands check and run command
-        put_chars(state.curr_command_buffer, state.curr_command_size, 0xF);
+        if (memcmp(state.curr_command_buffer, "ls", state.curr_command_size) == 0)
+        {
+            put_chars("berhasil ls", 11, 0xF);
+        }
+        else if (memcmp(state.curr_command_buffer, "cd", state.curr_command_size) == 0)
+        {
+            put_chars("berhasil cd", 11, 0xF);
+        }
+        else 
+        {
+            put_chars("'", 1, 0xF);
+            put_chars(state.curr_command_buffer, state.curr_command_size, 0xF);
+            put_chars("'", 1, 0xF);
+            put_chars(" is not recognized as an internal command.", 42, 0xF);
+        }
     }
 
     put_char('\n', 0xF);
