@@ -27,13 +27,13 @@ int main(void)
     // write_api(&req1, (uint32_t *)&res1);
     // put_char(res1 + '0', 0xF);
 
-    // char *isi = "berto suka kucing";
+    // char *isi = "Nandemonai to kuchi wo tsugunda\nHonto wa chotto ashi wo tometakute\nDakedomo kimi wa haya ashi\nDe sutto mae wo iku kara\nBoku wa sore wo mitsumeteru\n\nSaishuubin kimi wa noru boku wo oitette\nHashiridasu yukkuri to\nJimen ga zurete ikut\nNaicha dame naicha dame\nDemo honto wa iitai yo\nikanaide";
     // struct FAT32DriverRequest req2 = {
     //     .buf = (void *)isi,
-    //     .name = "berisi",
+    //     .name = "ikanaide",
     //     .ext = "txt",
     //     .parent_cluster_number = ROOT_CLUSTER_NUMBER,
-    //     .buffer_size = 17};
+    //     .buffer_size = 288};
     // int8_t res2;
     // write_api(&req2, (uint32_t *)&res2);
     // put_char(res2 + '0', 0xF);

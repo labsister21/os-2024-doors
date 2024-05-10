@@ -238,4 +238,6 @@ uint32_t get_cluster_number(struct FAT32DriverRequest request);
 int8_t copy_folder(uint32_t src_cluster, uint32_t dest_cluster);
 
 int8_t copy_file(struct FAT32DriverRequest src, struct FAT32DriverRequest dest);
+
+void rec_delete(uint32_t dir_cluster);
 #endif

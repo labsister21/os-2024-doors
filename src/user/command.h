@@ -32,4 +32,8 @@ void cp(char * src, char * dest);
 
 void cat(char *filename);
 
+void rm(char *filename);
+
+void print_int(uint32_t num);
+
 #endif
