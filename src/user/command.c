@@ -286,11 +286,6 @@ void cat(char *filename)
     uint32_t code;
     read_file_api(&req, &code);
 
-    put_chars(req.name, strlen(req.name), 0xF);
-    put_char('\n', 0xF);
-    put_chars(req.ext, strlen(req.ext), 0xF);
-    put_char('\n', 0xF);
-
     switch (code)
     {
     case 0:
@@ -300,16 +295,15 @@ void cat(char *filename)
         put_chars("'", 1, 0xF);
         put_chars(filename, strlen(filename), 0xF);
         put_chars("'", 1, 0xF);
-        put_chars(" is not a file.\n", 18, 0xF);
+        put_chars(" is not a file.\n", 17, 0xF);
         break;
     case 2:
         put_chars("'", 1, 0xF);
         put_chars(filename, strlen(filename), 0xF);
         put_chars("'", 1, 0xF);
-        put_chars(" is not found.\n", 15, 0xF);
+        put_chars(" is not found.\n", 16, 0xF);
         break;
     default:
-        put_chars("unexpected error", 17, 0xf);
+        put_chars("unexpected error occured\n", 26, 0xF);
     }
-    put_char('\n', 0xF);
 }
