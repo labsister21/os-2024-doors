@@ -81,7 +81,7 @@ void run_command()
             // cd()
             if (strlen(buf[1]) == 0)
             {
-                put_chars("Expected file name", 18, 0xF);
+                put_chars("Expected directory name", 23, 0xF);
                 put_char('\n', 0xF);
             }
             else
@@ -92,6 +92,18 @@ void run_command()
         else if (memcmp(cmd, "clear", cmd_len) == 0 || memcmp(cmd, "cls", cmd_len) == 0)
         {
             clear_screen();
+        }
+        else if (memcmp(cmd, "mkdir", cmd_len) == 0)
+        {
+            if (strlen(buf[1]) == 0)
+            {
+                put_chars("Expected directory name", 23, 0xF);
+                put_char('\n', 0xF);
+            }
+            else
+            {
+                mkdir(buf[1]);
+            }
         }
         else
         {
@@ -162,8 +174,18 @@ void cd(char *name)
 
     if (code == 0)
     {
-        strcat(state.work_dir_name, "/");
-        strcat(state.work_dir_name, name);
+        if (memcmp(name, "..", strlen(name)) == 0)
+        {
+            if (state.work_dir != ROOT_CLUSTER_NUMBER)
+            {
+                move_back(state.work_dir_name);
+            }
+        }
+        else
+        {
+            strcat(state.work_dir_name, "/");
+            strcat(state.work_dir_name, name);
+        }
         state.work_dir = (table.table[0].cluster_high << 16) | (table.table[0].cluster_low);
     }
     else if (code == 1)
@@ -179,5 +201,58 @@ void cd(char *name)
         put_chars(name, strlen(name), 0xF);
         put_chars("'", 1, 0xF);
         put_chars(" is not found.\n", 15, 0xF);
+    }
+}
+
+void mkdir(char *name)
+{
+    struct FAT32DirectoryTable table;
+    struct FAT32DriverRequest request = {
+        .buf = &table,
+        .ext = "\0\0\0",
+        .parent_cluster_number = state.work_dir,
+        .buffer_size = 0};
+
+    memcpy(request.name, name, 8);
+
+    uint32_t code;
+    write_api(&request, &code);
+
+    if (code == 0)
+    {
+        put_chars("'", 1, 0xF);
+        put_chars(name, strlen(name), 0xF);
+        put_chars("'", 1, 0xF);
+        put_chars(" is created successfully.\n", 26, 0xF);
+    }
+    else if (code == 1)
+    {
+        put_chars("'", 1, 0xF);
+        put_chars(name, strlen(name), 0xF);
+        put_chars("'", 1, 0xF);
+        put_chars(" already exists.\n", 17, 0xF);
+    }
+    else if (code == 2)
+    {
+        put_chars("Parent folder is undefined\n", 27, 0xF);
+    }
+    else
+    {
+        put_chars("Unexpected error occured\n", 25, 0xF);
+    }
+}
+
+void move_back(char *c)
+{
+    int i = 255;
+    while (i >= 0)
+    {
+        if (c[i] == '/')
+        {
+            c[i] = '\0';
+            break;
+        }
+        c[i] = '\0';
+        i--;
     }
 }

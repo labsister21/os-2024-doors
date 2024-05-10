@@ -138,6 +138,8 @@ void create_fat32(void)
         fat32_driver_state.fat_table.cluster_map[i] = FAT32_FAT_EMPTY_ENTRY;
     }
     init_directory_table(&fat32_driver_state.dir_table_buf, "root", 2);
+    fat32_driver_state.dir_table_buf.table[0].cluster_high = 0;
+    fat32_driver_state.dir_table_buf.table[0].cluster_low = 2;
     write_clusters(&fat32_driver_state.dir_table_buf, 2, 1);
     write_clusters(&fat32_driver_state, 1, 1);
 }
@@ -172,7 +174,7 @@ int8_t read_directory(struct FAT32DriverRequest request)
         return -1;
     read_clusters(&fat32_driver_state.dir_table_buf, request.parent_cluster_number, 1);
     uint8_t code = 2;
-    for (unsigned i = 2; i < CLUSTER_SIZE / sizeof(struct FAT32DirectoryEntry); i++)
+    for (unsigned i = 1; i < CLUSTER_SIZE / sizeof(struct FAT32DirectoryEntry); i++)
     {
         if (!(fat32_driver_state.dir_table_buf.table[i].user_attribute & UATTR_NOT_EMPTY))
             continue;
@@ -266,6 +268,8 @@ int8_t write(struct FAT32DriverRequest request)
                 fat32_driver_state.dir_table_buf.table[first].cluster_high = (uint16_t)(i >> 16);
                 struct FAT32DirectoryTable dt;
                 init_directory_table(&dt, request.name, request.parent_cluster_number);
+                dt.table[0].cluster_low = (uint16_t)i;
+                dt.table[0].cluster_high = (uint16_t)(i >> 16);
                 write_clusters(&dt, i, 1);
                 fat32_driver_state.fat_table.cluster_map[i] = FAT32_FAT_END_OF_FILE;
                 break;

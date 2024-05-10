@@ -26,4 +26,6 @@ void cd(char * name);
 
 void mkdir(char * name);
 
+void move_back(char *c);
+
 #endif
