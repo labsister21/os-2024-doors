@@ -1,0 +1,23 @@
+#ifndef COMMAND_H
+#define COMMAND_H
+
+#include <stdint.h>
+#include <stddef.h>
+#include "../header/filesystem/fat32.h"
+#include "syscall.h"
+
+struct ShellState
+{
+  uint32_t work_dir;
+  char curr_command_buffer[256];
+  uint32_t curr_command_size;
+  char work_dir_name[256];
+};
+
+void print_working_dir();
+
+void type_command();
+
+void run_command();
+
+#endif

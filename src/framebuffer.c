@@ -54,7 +54,7 @@ void framebuffer_set_cursor(uint8_t r, uint8_t c)
     out(CURSOR_PORT_DATA, (uint8_t)((pos >> 8) & 0xFF));
 }
 
-void new_frame_buffer_view(uint8_t fg, uint16_t bg, bool change)
+void new_frame_buffer_view(bool change)
 {
     if ((cursor_row < 0 || cursor_row >= BUFFER_HEIGHT_VIEW) || change)
     {
@@ -74,7 +74,6 @@ void new_frame_buffer_view(uint8_t fg, uint16_t bg, bool change)
             row = 25;
         }
         framebuffer_clear();
-        uint8_t attr = (bg << 4) | (fg);
         for (uint8_t i = 0; i < row; i++)
         {
             uint8_t col = frame_buffer.buffer[i + frame_row_pointer].size;
@@ -83,7 +82,7 @@ void new_frame_buffer_view(uint8_t fg, uint16_t bg, bool change)
                 if (j > 79)
                     continue;
                 FRAMEBUFFER_MEMORY_OFFSET[i * 160 + j * 2] = frame_buffer.buffer[frame_row_pointer + i].line_buf[j];
-                FRAMEBUFFER_MEMORY_OFFSET[i * 160 + j * 2 + 1] = attr;
+                FRAMEBUFFER_MEMORY_OFFSET[i * 160 + j * 2 + 1] = frame_buffer.buffer[frame_row_pointer + i].color_buf[j];
             }
         }
     }
@@ -103,7 +102,6 @@ void put_char_color(char c, uint32_t color)
 
 void put_char(char c, uint8_t fg, uint8_t bg)
 {
-    // TODO : Implement
     if (cursor_row + frame_row_pointer < BUFFER_MAX_HEIGHT)
     {
         if (c == '\n')
@@ -114,13 +112,13 @@ void put_char(char c, uint8_t fg, uint8_t bg)
                 frame_buffer.buffer[frame_row_pointer + cursor_row].size = 0;
                 if (cursor_row + frame_row_pointer < frame_buffer.size)
                 {
-                    new_frame_buffer_view(fg, bg, true);
+                    new_frame_buffer_view(true);
                 }
                 else
                 {
                     frame_buffer.size = frame_buffer.size + 1;
                 }
-                new_frame_buffer_view(fg, bg, true);
+                new_frame_buffer_view(true);
                 cursor_col = 0;
             }
         }
@@ -132,6 +130,7 @@ void put_char(char c, uint8_t fg, uint8_t bg)
                 FRAMEBUFFER_MEMORY_OFFSET[cursor_row * 160 + cursor_col * 2] = c;
                 FRAMEBUFFER_MEMORY_OFFSET[cursor_row * 160 + cursor_col * 2 + 1] = attr;
                 frame_buffer.buffer[frame_row_pointer + cursor_row].line_buf[cursor_col] = c;
+                frame_buffer.buffer[frame_row_pointer + cursor_row].color_buf[cursor_col] = attr;
                 if (cursor_col + 1 > frame_buffer.buffer[frame_row_pointer + cursor_row].size)
                 {
                     frame_buffer.buffer[frame_row_pointer + cursor_row].size = cursor_col + 1;
@@ -143,7 +142,7 @@ void put_char(char c, uint8_t fg, uint8_t bg)
                     cursor_row++;
                     cursor_col = 0;
                 }
-                new_frame_buffer_view(fg, bg, false);
+                new_frame_buffer_view(false);
             }
         }
         framebuffer_set_cursor(cursor_row, cursor_col);
@@ -215,7 +214,7 @@ void handle_new_char(char c, uint8_t fg, uint8_t bg)
                 {
                     cursor_row--;
                     cursor_col = cursor_col < frame_buffer.buffer[cursor_row + frame_row_pointer].size ? cursor_col : frame_buffer.buffer[cursor_row + frame_row_pointer].size;
-                    new_frame_buffer_view(0xF, 0, false);
+                    new_frame_buffer_view(false);
                 }
                 break;
             case ARROW_DOWN:
@@ -223,7 +222,7 @@ void handle_new_char(char c, uint8_t fg, uint8_t bg)
                 {
                     cursor_row++;
                     cursor_col = cursor_col < frame_buffer.buffer[cursor_row + frame_row_pointer].size ? cursor_col : frame_buffer.buffer[cursor_row + frame_row_pointer].size;
-                    new_frame_buffer_view(0xF, 0, false);
+                    new_frame_buffer_view(false);
                 }
                 break;
             case ARROW_LEFT:
@@ -234,7 +233,7 @@ void handle_new_char(char c, uint8_t fg, uint8_t bg)
                     {
                         cursor_row--;
                         cursor_col = frame_buffer.buffer[cursor_row + frame_row_pointer].size;
-                        new_frame_buffer_view(0xF, 0, false);
+                        new_frame_buffer_view(false);
                     }
                     else
                     {
@@ -248,7 +247,7 @@ void handle_new_char(char c, uint8_t fg, uint8_t bg)
                 {
                     cursor_col = 0;
                     cursor_row++;
-                    new_frame_buffer_view(0xF, 0, false);
+                    new_frame_buffer_view(false);
                 }
                 else if (cursor_col > frame_buffer.buffer[cursor_row + frame_row_pointer].size && cursor_row + frame_row_pointer >= frame_buffer.size - 1)
                 {
@@ -278,7 +277,7 @@ void handle_new_char(char c, uint8_t fg, uint8_t bg)
                     else
                     {
                         cursor_row--;
-                        new_frame_buffer_view(0xF, 0, true);
+                        new_frame_buffer_view(true);
                     }
                     cursor_col = frame_buffer.buffer[cursor_row + frame_row_pointer].size;
                 }

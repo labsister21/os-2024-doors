@@ -92,7 +92,7 @@ void syscall(struct InterruptFrame frame)
         get_keyboard_buffer((char *)frame.cpu.general.ebx);
         break;
     case 5:
-        put_char_color(*((char *)frame.cpu.general.ebx), frame.cpu.general.ecx);
+        put_char_color(frame.cpu.general.ebx, frame.cpu.general.ecx);
         break;
 
     case 6:
@@ -105,7 +105,9 @@ void syscall(struct InterruptFrame frame)
     case 7:
         keyboard_state_activate();
         break;
-
+    case 8:
+        clear_screen();
+        break;
     default:
         break;
     }

@@ -17,6 +17,7 @@ struct LineBuffer
 {
     uint8_t size;
     uint8_t line_buf[BUFFER_WIDTH_VIEW];
+    uint8_t color_buf[BUFFER_WIDTH_VIEW];
 } __attribute((packed));
 
 struct FrameBuffer
@@ -67,7 +68,7 @@ void framebuffer_set_cursor(uint8_t r, uint8_t c);
  * Extra note: It's allowed to use different color palette for this
  *
  */
-void new_frame_buffer_view(uint8_t fg, uint16_t bg, bool change);
+void new_frame_buffer_view(bool change);
 
 void framebuffer_clear(void);
 

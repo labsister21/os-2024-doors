@@ -51,3 +51,44 @@ void *memmove(void *dest, const void *src, size_t n)
 
     return dest;
 }
+
+void strcat(char* dest, char* src){
+    int i = 0;
+    while(dest[i] != '\0'){
+        i++;
+    }
+    int j = 0;
+    while(src[j] != '\0'){
+        dest[i] = src[j];
+        i++;
+        j++;
+    }
+    dest[i] = '\0';
+}
+
+void strset(char* str, char c, uint8_t len){
+    int i = 0;
+    while(i < len){
+        str[i] = c;
+        i++;
+    }
+    str[i] = '\0';
+}
+
+void strsplit(char* str, char delim, char result[16][256]) {
+    int i = 0;
+    int j = 0;
+    int k = 0;
+    while(str[i] != '\0'){
+        if(str[i] == delim){
+            result[j][k] = '\0';
+            j++;
+            k = 0;
+        }else{
+            result[j][k] = str[i];
+            k++;
+        }
+        i++;
+    }
+    result[j][k] = '\0';
+}
