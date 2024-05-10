@@ -22,10 +22,12 @@ void run_command();
 
 void ls();
 
-void cd(char * name);
+void cd(char *name);
 
-void mkdir(char * name);
+void mkdir(char *name);
 
 void move_back(char *c);
+
+void cat(char *filename);
 
 #endif

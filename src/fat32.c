@@ -112,7 +112,6 @@ void init_directory_table(struct FAT32DirectoryTable *dir_table, char *name, uin
     dir_table->table[0].user_attribute = UATTR_NOT_EMPTY;
     dir_table->table[0].undelete = false;
 
-
     for (unsigned i = 2; i < CLUSTER_SIZE / sizeof(struct FAT32DirectoryEntry); i++)
     {
         memset(&dir_table->table[i], 0, sizeof(struct FAT32DirectoryEntry));
