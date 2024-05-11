@@ -123,6 +123,15 @@ void syscall(struct InterruptFrame frame)
     case 15:
         *((int8_t *)frame.cpu.general.ecx) = delete_folder_rec(*(struct FAT32DriverRequest *)frame.cpu.general.ebx);
         break;
+    case 16:
+        move_screen((char)frame.cpu.general.ebx);
+        break;
+    case 17:
+        *(bool *)frame.cpu.general.ebx = is_shift();
+        break;
+    case 18:
+        *(bool *)frame.cpu.general.ebx = get_is_cursor_viewable();
+        break;
     default:
         break;
     }

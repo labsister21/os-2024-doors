@@ -38,6 +38,8 @@ void rm(char *filename);
 
 void rm_rec(char * foldername);
 
+void mv(char *src, char *dest);
+
 void help();
 
 void print_int(uint32_t num);

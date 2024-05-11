@@ -11,9 +11,17 @@ struct FrameBuffer frame_buffer;
 
 int cursor_row, cursor_col, frame_row_pointer;
 
+bool is_cursor_viewable = true;
+
+bool get_is_cursor_viewable()
+{
+    return is_cursor_viewable;
+}
+
 void init_frame_buffer()
 {
     frame_buffer.size = 1;
+    is_cursor_viewable = true;
     for (uint16_t i = 0; i < BUFFER_MAX_HEIGHT; i++)
     {
         frame_buffer.buffer[i].size = 0;
@@ -41,6 +49,7 @@ void clear_screen()
     frame_row_pointer = 0;
     cursor_col = 0;
     cursor_row = 0;
+    is_cursor_viewable = true;
     framebuffer_set_cursor(0, 0);
     for (int i = 0; i < BUFFER_MAX_HEIGHT; i++)
     {
@@ -48,7 +57,7 @@ void clear_screen()
         memset(frame_buffer.buffer[i].line_buf, 0, 79);
         memset(frame_buffer.buffer[i].color_buf, 0, 79);
     }
-    frame_buffer.size = 0;
+    frame_buffer.size = 1;
 }
 
 void set_cursor_col(uint32_t col)
@@ -59,12 +68,71 @@ void set_cursor_col(uint32_t col)
 
 void framebuffer_set_cursor(uint8_t r, uint8_t c)
 {
-    // TODO : Implement
+    if (!is_cursor_viewable) 
+    {
+        disable_cursor();
+        return;
+    }
+    enable_cursor(14, 15);
     uint16_t pos = 80 * r + c;
     out(CURSOR_PORT_CMD, 0x0F);
     out(CURSOR_PORT_DATA, (uint8_t)(pos & 0xFF));
     out(CURSOR_PORT_CMD, 0x0E);
     out(CURSOR_PORT_DATA, (uint8_t)((pos >> 8) & 0xFF));
+}
+
+void move_screen(char c)
+{
+    switch (c)
+    {
+    case ARROW_UP:
+        /* code */
+        if (frame_row_pointer > 0)
+        {
+            frame_row_pointer--;
+        }
+        break;
+    case ARROW_DOWN:
+        if (frame_row_pointer + BUFFER_HEIGHT_VIEW < frame_buffer.size)
+        {
+            frame_row_pointer++;
+        }
+        break;
+    default:
+        break;
+    }
+    if (c == ARROW_UP || c == ARROW_DOWN)
+    {
+        // check if cursor is viewable
+        if (frame_buffer.size > frame_row_pointer && frame_buffer.size <= frame_row_pointer + BUFFER_HEIGHT_VIEW)
+        {
+            is_cursor_viewable = true;
+        }
+        else
+        {
+            is_cursor_viewable = false;
+        }
+
+        uint32_t row = (uint8_t)(frame_buffer.size - frame_row_pointer);
+        if (row > 25)
+        {
+            row = 25;
+        }
+        framebuffer_clear();
+        for (uint32_t i = 0; i < row; i++)
+        {
+            uint8_t col = frame_buffer.buffer[i + frame_row_pointer].size;
+            for (uint8_t j = 0; j < col; j++)
+            {
+                if (j > 79)
+                    continue;
+                FRAMEBUFFER_MEMORY_OFFSET[i * 160 + j * 2] = frame_buffer.buffer[frame_row_pointer + i].line_buf[j];
+                FRAMEBUFFER_MEMORY_OFFSET[i * 160 + j * 2 + 1] = frame_buffer.buffer[frame_row_pointer + i].color_buf[j];
+            }
+        }
+
+    }
+    framebuffer_set_cursor(cursor_row, cursor_col);
 }
 
 void new_frame_buffer_view(bool change)

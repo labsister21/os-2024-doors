@@ -571,6 +571,7 @@ int8_t copy_file(struct FAT32DriverRequest src, struct FAT32DriverRequest dest)
     }
 
     // check if destination file exist
+    read_clusters(&fat32_driver_state.dir_table_buf, dest.parent_cluster_number, 1);
     idx = 0;
     for (unsigned i = 2; i < CLUSTER_SIZE / sizeof(struct FAT32DirectoryEntry); i++)
     {
@@ -588,7 +589,7 @@ int8_t copy_file(struct FAT32DriverRequest src, struct FAT32DriverRequest dest)
 
     struct FAT32DriverRequest req = {
         .buf = buf,
-        .parent_cluster_number = src.parent_cluster_number,
+        .parent_cluster_number = dest.parent_cluster_number,
         .buffer_size = filesize,
     };
     memcpy(req.name, dest.name, 8);

@@ -30,6 +30,10 @@ extern struct FrameBuffer frame_buffer;
 
 extern int cursor_row, cursor_col, frame_row_pointer;
 
+extern bool is_cursor_viewable;
+
+bool get_is_cursor_viewable();
+
 void init_frame_buffer();
 
 void put_char_color(char c, uint32_t color);
@@ -89,5 +93,7 @@ void puts(const char *str, uint32_t cnt, uint32_t color);
 void handle_new_char(char c, uint8_t fg, uint8_t bg);
 
 void set_cursor_col(uint32_t col);
+
+void move_screen(char c);
 
 #endif

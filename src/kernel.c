@@ -18,6 +18,7 @@ void kernel_setup(void)
     pic_remap();
     initialize_idt();
     activate_keyboard_interrupt();
+    init_frame_buffer();
     framebuffer_clear();
     framebuffer_set_cursor(0, 0);
     initialize_filesystem_fat32();
