@@ -180,6 +180,10 @@ void run_command()
                 cat(buf[1]);
             }
         }
+        else if (memcmp(cmd, "help", cmd_len) == 0)
+        {
+            help();
+        }
         else
         {
             put_chars("'", 1, 0xC);
@@ -710,6 +714,21 @@ void cp_rec(char *src, char *dest)
     {
         put_chars("Failed to copy folder\n", 23, 0xC);
     }
+}
+
+void help()
+{
+    put_chars("Available commands: \n", 22, 0xB);
+    put_chars("cat filename          show content of file\n", 44, 0xB);
+    put_chars("cd target             move current directory to target\n", 56, 0xB);
+    put_chars("clear                 clear current screen\n", 44, 0xB);
+    put_chars("cls                   clear current screen\n", 44, 0xB);
+    put_chars("cp [-r] source dest   copy file/folder to destination\n", 55, 0xB);
+    put_chars("ls [foldername]       show current or target directory contents\n", 65, 0xB);
+    put_chars("mkdir dirname         create new directory\n", 44, 0xB);
+    put_chars("mv source dest        move file/folder to destination\n", 55, 0xB);
+    put_chars("rm [-r] target        delete folder/ file\n", 43, 0xB);
+    put_chars("whereis name          find file/folder with given name\n", 56, 0xB);
 }
 
 void print_int(uint32_t num)
