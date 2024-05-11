@@ -209,6 +209,37 @@ void run_command()
         {
             help();
         }
+        else if (memcmp(cmd, "find", cmd_len) == 0)
+        {
+            if (strlen(buf[1]) == 0)
+            {
+                put_chars("Expected target directory name", 31, 0xC);
+                put_char('\n', 0xC);
+            }
+            else
+            {
+                // handle dir name too long
+
+                char split_dirname[16][256] = {0};
+                strsplit(buf[1], '.', split_dirname);
+                char name[8] = {0};
+                char ext[3] = {"\0\0\0"};
+
+                memcpy(name, split_dirname[0], 8);
+                memcpy(ext, split_dirname[1], 3);
+
+                bool isFound = false;
+                uint8_t banyak = 0;
+                put_chars("this\n", 6, 0xc);
+                find(ROOT_CLUSTER_NUMBER, name, ext, &isFound, &banyak);
+                put_chars("that\n", 6, 0xc);
+
+                if (!isFound)
+                {
+                    put_chars("No such file or folder\n", 24, 0xC);
+                }
+            }
+        }
         else
         {
             put_chars("'", 1, 0xC);
@@ -943,4 +974,58 @@ void print_int(uint32_t num)
         put_char((temp % 10) + '0', 0xF);
         temp /= 10;
     }
+}
+
+void find(uint32_t cluster_number, char name[8], char ext[3], bool *isFound, uint8_t *banyak)
+{
+    struct FAT32DirectoryTable table;
+    read_clusters_api(&table, cluster_number, 1);
+
+    for (size_t i = 2; i < CLUSTER_SIZE / sizeof(struct FAT32DirectoryEntry); i++)
+    {
+        uint32_t cluster_number = (table.table[i].cluster_high << 16) | table.table[i].cluster_low;
+        if ((memcmp(table.table[i].name, name, 8) == 0) && memcmp(table.table[i].ext, ext, 3) == 0)
+        {
+            *banyak += 1;
+            *isFound = 1;
+            put_char(' ', 0xC);
+
+            if (!(table.table[i].attribute & ATTR_SUBDIRECTORY))
+            {
+                constructPath(cluster_number);
+                put_char('/', 0xC);
+                put_chars(table.table[i].name, strlen(table.table[i].name), 0xC);
+                if (memcmp(table.table[i].ext, "\0\0\0", 3) != 0) // file
+                {
+                    put_char('.', 0xC);
+                    put_chars(table.table[i].ext, strlen(table.table[i].ext), 0xC);
+                }
+            }
+            else
+            {
+                constructPath(cluster_number);
+            }
+        }
+        if (table.table[i].attribute & ATTR_SUBDIRECTORY)
+        {
+            find(cluster_number, name, ext, isFound, banyak);
+        }
+    }
+}
+
+void constructPath(uint32_t cluster_number)
+{
+    struct FAT32DirectoryTable table;
+    read_clusters_api(&table, cluster_number, 1);
+
+    /**
+     * TODO: implement
+     */
+    // if (memcmp(table.table[0].name, "root\0\0\0", 8) != 0)
+    // {
+    //     uint32_t parent_cluster = (table.table[0].cluster_high << 16) | table.table[0].cluster_low;
+    //     constructPath(parent_cluster);
+    //     put_char('/', 0xC);
+    //     put_chars(table.table[0].name, strlen(table.table[0].name), 0xC);
+    // }
 }
