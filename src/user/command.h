@@ -30,9 +30,13 @@ void move_back(char *c);
 
 void cp(char * src, char * dest);
 
+void cp_rec(char * src, char * dest);
+
 void cat(char *filename);
 
 void rm(char *filename);
+
+void rm_rec(char * foldername);
 
 void print_int(uint32_t num);
 

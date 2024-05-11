@@ -117,6 +117,23 @@ void run_command()
                 put_chars("Expected file/folder name", 26, 0xC);
                 put_char('\n', 0xC);
             }
+            else if ((memcmp(buf[1], "-r", strlen(buf[1])) == 0) || memcmp(buf[1], "-R", strlen(buf[1])) == 0)
+            {
+                if (strlen(buf[2]) == 0)
+                {
+                    put_chars("Expected file/folder name", 26, 0xC);
+                    put_char('\n', 0xC);
+                }
+                else if (strlen(buf[3]) != 0)
+                {
+                    put_chars("Too many arguments", 19, 0xC);
+                    put_char('\n', 0xC);
+                }
+                else
+                {
+                    rm_rec(buf[2]);
+                }
+            }
             else if (strlen(buf[2]) != 0)
             {
                 put_chars("Too many arguments", 19, 0xC);
@@ -133,6 +150,18 @@ void run_command()
             {
                 put_chars("Expected file/folder names", 26, 0xC);
                 put_char('\n', 0xC);
+            }
+            else if ((memcmp(buf[1], "-r", strlen(buf[1])) == 0) || memcmp(buf[1], "-R", strlen(buf[1])) == 0)
+            {
+                if (strlen(buf[2]) == 0 || strlen(buf[3]) == 0)
+                {
+                    put_chars("Expected file/folder names", 26, 0xC);
+                    put_char('\n', 0xC);
+                }
+                else
+                {
+                    cp_rec(buf[2], buf[3]);
+                }
             }
             else
             {
@@ -353,7 +382,57 @@ void rm(char *filename)
         put_chars("'", 1, 0xC);
         put_chars(filename, strlen(filename), 0xC);
         put_chars("'", 1, 0xC);
-        put_chars(" is not found.\n", 15, 0xC);
+        put_chars(" is not found.\n", 16, 0xC);
+        break;
+    case 2:
+        put_chars("'", 1, 0xC);
+        put_chars(filename, strlen(filename), 0xC);
+        put_chars("'", 1, 0xC);
+        put_chars(" is not an empty directory.\n", 29, 0xC);
+        break;
+    default:
+        put_chars("Unexpected error occured\n", 25, 0xC);
+        break;
+    }
+}
+
+void rm_rec(char *foldername)
+{
+    char filename_buf[16][256] = {0};
+    strsplit(foldername, '.', filename_buf);
+    if (strlen(filename_buf[1]) != 0)
+    {
+        put_chars("Recursive flag can only be applied to directory\n", 49, 0xC);
+        return;
+    }
+
+    struct FAT32DriverRequest req = {
+        .parent_cluster_number = state.work_dir,
+        .buffer_size = 0};
+    memcpy(req.name, filename_buf[0], 8);
+    uint32_t code;
+
+    delete_recursive_api(&req, &code);
+
+    switch (code)
+    {
+    case 0:
+        put_chars("'", 1, 0xF);
+        put_chars(foldername, strlen(foldername), 0xF);
+        put_chars("'", 1, 0xF);
+        put_chars(" has been deleted successfully.\n", 33, 0xF);
+        break;
+    case 1:
+        put_chars("'", 1, 0xC);
+        put_chars(foldername, strlen(foldername), 0xC);
+        put_chars("'", 1, 0xC);
+        put_chars(" is not a directory.\n", 29, 0xC);
+        break;
+    case 2:
+        put_chars("'", 1, 0xC);
+        put_chars(foldername, strlen(foldername), 0xC);
+        put_chars("'", 1, 0xC);
+        put_chars(" is not found.\n", 16, 0xC);
         break;
     default:
         put_chars("Unexpected error occured\n", 25, 0xC);
@@ -398,6 +477,7 @@ void cat(char *filename)
         break;
     default:
         put_chars("unexpected error occured\n", 26, 0xC);
+        break;
     }
 }
 
@@ -414,7 +494,6 @@ void cp(char *src, char *dest)
     };
     memcpy(src_req.name, src_buf[0], 8);
     memcpy(src_req.ext, src_buf[1], 3);
-
     uint32_t src_code;
     search_file_api(&src_req, &src_code);
 
@@ -428,7 +507,7 @@ void cp(char *src, char *dest)
     search_file_api(&dest_req, &dest_code);
 
     uint32_t res;
-    if (src_code == 0 && src_code == dest_code) // handle file copy
+    if (src_code == 0 && (dest_code == 0 || dest_code == 2))
     {
         copy_file_api(&src_req, &dest_req, &res);
         if (res == 0)
@@ -444,38 +523,13 @@ void cp(char *src, char *dest)
         }
         else
         {
+            put_char('0' + res, 0xC);
             put_chars("Failed to copy file\n", 21, 0xC);
         }
     }
-    else if (src_code == 1 && src_code == dest_code) // handle folder copy
+    else if (src_code == 1 && src_code == dest_code)
     {
-        uint32_t src_cluster;
-        uint32_t dest_cluster;
-        get_cluster_number_api(&src_req, &src_cluster);
-        get_cluster_number_api(&dest_req, &dest_cluster);
-
-        if (!src_cluster || !dest_cluster)
-        {
-            put_chars("Failed to copy folder\n", 22, 0xC);
-            return;
-        }
-
-        copy_folder_api(src_cluster, dest_cluster, &res);
-        if (res == 0)
-        {
-            put_chars("Succesfully copied folder ", 26, 0xF);
-            put_chars("'", 1, 0xF);
-            put_chars(src, strlen(src), 0xF);
-            put_chars("'", 1, 0xF);
-            put_chars(" to ", 4, 0xF);
-            put_chars("'", 1, 0xF);
-            put_chars(dest, strlen(dest), 0xF);
-            put_chars("'\n", 2, 0xF);
-        }
-        else
-        {
-            put_chars("Failed to copy folder\n", 22, 0xF);
-        }
+        put_chars("Use recursive flag to copy directory\n", 38, 0xC);
     }
     else if ((src_code == 0 && dest_code == 1) || (src_code == 1 && dest_code == 0)) // handle file
     {
@@ -495,16 +549,166 @@ void cp(char *src, char *dest)
         put_chars("'", 1, 0xC);
         put_chars(" is not found.\n", 15, 0xC);
     }
-    else if (dest_code == 2)
-    {
-        put_chars("'", 1, 0xC);
-        put_chars(dest, strlen(dest), 0xC);
-        put_chars("'", 1, 0xC);
-        put_chars(" is not found.\n", 15, 0xC);
-    }
     else
     {
         put_chars("Unexpected error occured\n", 22, 0xC);
+    }
+}
+
+void cp_rec(char *src, char *dest)
+{
+    char src_buf[16][256] = {0};
+    strsplit(src, '.', src_buf);
+    char dest_buf[16][256] = {0};
+    strsplit(dest, '.', dest_buf);
+
+    // check source
+    struct FAT32DriverRequest src_req = {
+        .parent_cluster_number = state.work_dir,
+        .buffer_size = 0};
+    memcpy(src_req.name, src_buf[0], 8);
+    memcpy(src_req.ext, src_buf[1], 3);
+    uint32_t src_code;
+    search_file_api(&src_req, &src_code);
+
+    // check dest
+    struct FAT32DriverRequest dest_req = {
+        .parent_cluster_number = state.work_dir,
+        .buffer_size = 0};
+    memcpy(dest_req.name, dest_buf[0], 8);
+    memcpy(dest_req.ext, dest_buf[1], 3);
+    uint32_t dest_code;
+    search_file_api(&dest_req, &dest_code);
+
+    uint32_t res;
+    if (src_code == 2)
+    {
+        put_chars("'", 1, 0xC);
+        put_chars(src, strlen(src), 0xC);
+        put_chars("'", 1, 0xC);
+        put_chars(" is not found.\n", 15, 0xC);
+    }
+    else if (src_code == 0 || dest_code == 0)
+    {
+        put_chars("Recursive flag can only be applied to directory\n", 49, 0xC);
+    }
+    else if (src_code == 1)
+    {
+        uint32_t src_cluster;
+        uint32_t dest_cluster;
+        get_cluster_number_api(&src_req, &src_cluster);
+
+        if (dest_code == 1)
+        {
+            get_cluster_number_api(&dest_req, &dest_cluster);
+            if (!src_cluster || !dest_cluster)
+            {
+                put_chars("Failed to copy folder\n", 23, 0xC);
+                return;
+            }
+
+            uint32_t new_dest_code;
+            // create new subdirectory in dest dir
+            struct FAT32DriverRequest dr = {
+                .buffer_size = 0,
+                .parent_cluster_number = dest_cluster,
+                .ext = "\0\0\0",
+            };
+            memcpy(dr.name, src, 8);
+            write_api(&dr, &new_dest_code);
+
+            if (new_dest_code != 0)
+            {
+                put_chars("Failed to copy folder\n", 23, 0xC);
+                return;
+            }
+
+            // get new subdir cluster
+            uint32_t new_dest_cluster;
+            get_cluster_number_api(&dr, &new_dest_cluster);
+
+            if (!new_dest_cluster)
+            {
+                put_chars("Failed to copy folder\n", 23, 0xC);
+                return;
+            }
+
+            // copy folder
+            copy_folder_api(src_cluster, new_dest_cluster, &res);
+            if (res == 0)
+            {
+                put_chars("Succesfully copied folder ", 27, 0xF);
+                put_chars("'", 1, 0xF);
+                put_chars(src, strlen(src), 0xF);
+                put_chars("'", 1, 0xF);
+                put_chars(" to ", 4, 0xF);
+                put_chars("'", 1, 0xF);
+                put_chars(dest, strlen(dest), 0xF);
+                put_chars("'\n", 2, 0xF);
+            }
+            else // copy failed
+            {
+                put_chars("Failed to copy folder\n", 23, 0xC);
+            }
+        }
+        else if (dest_code == 2)
+        {
+            if (!src_cluster) // src cluster not found
+            {
+                put_chars("Failed to copy folder\n", 23, 0xC);
+                return;
+            }
+            uint32_t new_dest_code;
+
+            // create new directory
+            struct FAT32DriverRequest dr = {
+                .buffer_size = 0,
+                .parent_cluster_number = state.work_dir,
+                .ext = "\0\0\0",
+            };
+            memcpy(dr.name, dest, 8);
+            write_api(&dr, &new_dest_code);
+
+            if (new_dest_code != 0) // if write file
+            {
+                put_chars("Failed to copy folder\n", 23, 0xC);
+                return;
+            }
+
+            // get new directory cluster number
+            get_cluster_number_api(&dr, &dest_cluster);
+
+            if (!dest_cluster) // dest cluster not found
+            {
+                put_chars("Failed to copy folder\n", 23, 0xC);
+                return;
+            }
+            // copy folder
+            copy_folder_api(src_cluster, dest_cluster, &res);
+            if (res == 0)
+            {
+                put_chars("Succesfully copied folder ", 27, 0xF);
+                put_chars("'", 1, 0xF);
+                put_chars(src, strlen(src), 0xF);
+                put_chars("'", 1, 0xF);
+                put_chars(" to ", 4, 0xF);
+                put_chars("'", 1, 0xF);
+                put_chars(dest, strlen(dest), 0xF);
+                put_chars("'\n", 2, 0xF);
+            }
+            else // copy failed
+            {
+                put_chars("Failed to copy folder\n", 23, 0xC);
+            }
+        }
+        else
+        {
+            put_chars("Failed to copy folder\n", 23, 0xC);
+        }
+    }
+    else
+    {
+        put_chars("Failed to copy folder\n", 23, 0xC);
     }
 }
 

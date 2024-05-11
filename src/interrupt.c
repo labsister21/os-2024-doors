@@ -120,6 +120,9 @@ void syscall(struct InterruptFrame frame)
     case 14:
         *((int8_t *)frame.cpu.general.edx) = copy_file(*(struct FAT32DriverRequest *)frame.cpu.general.ebx, *(struct FAT32DriverRequest *)frame.cpu.general.ecx);
         break;
+    case 15:
+        *((int8_t *)frame.cpu.general.ecx) = delete_folder_rec(*(struct FAT32DriverRequest *)frame.cpu.general.ebx);
+        break;
     default:
         break;
     }

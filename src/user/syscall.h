@@ -38,4 +38,5 @@ void copy_folder_api(uint32_t src, uint32_t dest, uint32_t *code);
 
 void copy_file_api(struct FAT32DriverRequest *src, struct FAT32DriverRequest *dest, uint32_t *code);
 
+void delete_recursive_api(struct FAT32DriverRequest *req, uint32_t *code);
 #endif
