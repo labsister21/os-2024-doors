@@ -111,11 +111,15 @@ bool paging_free_user_page_frame(struct PageDirectory *page_dir, void *virtual_a
     if (page_dir->table[page_table_index].flag.present_bit)
     {
         // Mark the page frame as free in the page frame map
-        page_manager_state.page_frame_map[page_dir->table[page_table_index].lower_address] = false;
+        page_manager_state.page_frame_map[(page_dir->table[page_table_index].lower_address)] = false;
         // Increase the count of free page frames
         page_manager_state.free_page_frame_count++;
         // Clear the present bit to mark the page as not present
         page_dir->table[page_table_index].flag.present_bit = 0;
+        page_dir->table[page_table_index].higher_address = 0;
+        page_dir->table[page_table_index].lower_address = 0;
+        page_dir->table[page_table_index].flag.write_bit = 0;
+        page_dir->table[page_table_index].flag.user_supervisor = 0;
         // Invalidate TLB entry for the virtual address
         flush_single_tlb(virtual_addr);
         return true; // Deallocation succeeded
