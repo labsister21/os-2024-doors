@@ -57,7 +57,6 @@ page directory
 */
 struct Context
 {
-    // TODO: Add important field here
     struct CPURegister cpu;
     uint32_t eip;
     uint32_t eflags;

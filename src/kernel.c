@@ -10,7 +10,7 @@
 #include "header/driver/disk.h"
 #include "header/filesystem/fat32.h"
 #include "header/memory/paging.h"
-#include "header/process/process.h"
+#include "header/process/scheduler.h"
 
 // 2.2.5
 void kernel_setup(void)
@@ -43,9 +43,8 @@ void kernel_setup(void)
     set_tss_kernel_current_stack();
 
     process_create_user_process(request);
-    paging_use_page_directory(_process_list[0].context.page_directory_virtual_addr);
-    kernel_execute_user_program((uint8_t *)0);
-
-    while (true)
-        ;
+    // paging_use_page_directory(_process_list[0].context.page_directory_virtual_addr);
+    // kernel_execute_user_program((uint8_t *)0);
+    scheduler_init();
+    scheduler_switch_to_next_process();
 }
