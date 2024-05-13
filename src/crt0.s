@@ -4,4 +4,6 @@ extern main
 section .text
 _start:
     call main
-    jmp  $
+    mov ebx, eax
+    mov eax, 19
+    int 0x30

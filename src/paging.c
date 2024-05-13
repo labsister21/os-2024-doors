@@ -115,11 +115,12 @@ bool paging_free_user_page_frame(struct PageDirectory *page_dir, void *virtual_a
         // Increase the count of free page frames
         page_manager_state.free_page_frame_count++;
         // Clear the present bit to mark the page as not present
-        page_dir->table[page_table_index].flag.present_bit = 0;
-        page_dir->table[page_table_index].higher_address = 0;
-        page_dir->table[page_table_index].lower_address = 0;
-        page_dir->table[page_table_index].flag.write_bit = 0;
-        page_dir->table[page_table_index].flag.user_supervisor = 0;
+        // page_dir->table[page_table_index].flag.present_bit = 0;
+        // page_dir->table[page_table_index].higher_address = 0;
+        // page_dir->table[page_table_index].lower_address = 0;
+        // page_dir->table[page_table_index].flag.write_bit = 0;
+        // page_dir->table[page_table_index].flag.user_supervisor = 0;
+        memset(&(page_dir->table[page_table_index]), 0, sizeof(struct PageDirectoryEntry));
         // Invalidate TLB entry for the virtual address
         flush_single_tlb(virtual_addr);
         return true; // Deallocation succeeded
@@ -182,7 +183,13 @@ bool paging_free_page_directory(struct PageDirectory *page_dir)
         if (&page_directory_list[i] == page_dir)
         {
             page_directory_manager.page_directory_used[i] = false;
-            memset(page_dir, 0, sizeof(struct PageDirectory));
+            for (uint32_t j = 0; j < 1024; j++)
+            {
+                if (page_dir->table[j].flag.present_bit)
+                {
+                    paging_free_user_page_frame(page_dir, (void *)((uint32_t)j << 22));
+                }
+            }
             return true;
         }
     }

@@ -65,9 +65,9 @@ struct Context
 
 typedef enum PROCESS_STATE
 {
-    RUNNING,
+    BLOCKED,
     READY,
-    BLOCKED
+    RUNNING
 } PROCESS_STATE;
 
 struct ProcessManagerState

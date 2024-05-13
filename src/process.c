@@ -121,6 +121,25 @@ struct ProcessControlBlock *process_get_current_running_pcb_pointer(void)
 
 bool process_destroy(uint32_t pid)
 {
-    // TODO: implement
-    return pid == 1;
+    // TODO: implement process destroy
+    if (pid < PROCESS_COUNT_MAX)
+        return false;
+    if (!process_manager_state.pid_used[pid])
+        return false;
+
+    // stop the process
+    _process_list[pid].metadata.state = BLOCKED;
+
+    // release page directory
+    bool check = paging_free_page_directory(_process_list[pid].context.page_directory_virtual_addr);
+    if (!check)
+        return check;
+
+    // release PCB
+    memset(&(_process_list[pid]), 0, sizeof(struct ProcessControlBlock));
+
+    // set manager state for pid to false
+    process_manager_state.pid_used[pid] = false;
+    process_manager_state.active_process_count--;
+    return true;
 }
