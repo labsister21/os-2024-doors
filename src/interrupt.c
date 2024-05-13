@@ -48,8 +48,13 @@ void main_interrupt_handler(struct InterruptFrame frame)
         keyboard_isr();
         break;
     case (PIC1_OFFSET + IRQ_TIMER):
-        scheduler_switch_to_next_process();
+        struct Context ctx;
+        ctx.eflags = frame.int_stack.eflags;
+        ctx.eip = frame.int_stack.eip;
+        ctx.cpu = frame.cpu;
         pic_ack(IRQ_TIMER);
+        scheduler_save_context_to_current_running_pcb(ctx);
+        scheduler_switch_to_next_process();
         break;
     case 0x30:
         syscall(frame);

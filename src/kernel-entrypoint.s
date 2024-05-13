@@ -122,19 +122,22 @@ process_context_switch:
 
     ; setup IRET stack frame
     push eax ; GDT_USER_CODE_SELECTOR
-    mov eax, 0x400000-4
-    push eax ; last 4 MiB
+    mov eax, [ecx+12]
+    push eax
     mov eax, [ecx+52]
-    push eax ; eflags
+    push eax ;eflags
     mov eax, 0x18 | 0x3
     push eax ; Code segment selector USER CODE SELECTOR
     mov eax, [ecx+48]
     push eax ; eip
 
-    ; load all general purpose register
+    ; load all register
+    mov edi, [ecx]
+    mov esi, [ecx+4]
+    mov ebp, [ecx+8]
     mov ebx, [ecx+16]
     mov edx, [ecx+20]
     mov eax, [ecx+28]
-    mov ecx, [esp+28]
+    mov ecx, [ecx+32]
 
     iret

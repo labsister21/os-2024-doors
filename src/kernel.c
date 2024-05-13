@@ -47,4 +47,5 @@ void kernel_setup(void)
     // kernel_execute_user_program((uint8_t *)0);
     scheduler_init();
     scheduler_switch_to_next_process();
+    while (true);
 }

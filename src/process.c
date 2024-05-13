@@ -81,6 +81,7 @@ int32_t process_create_user_process(struct FAT32DriverRequest request)
     new_pcb->context.cpu.segment.es = GDT_USER_DATA_SEGMENT_SELECTOR;
     new_pcb->context.cpu.segment.fs = GDT_USER_DATA_SEGMENT_SELECTOR;
     new_pcb->context.cpu.segment.gs = GDT_USER_DATA_SEGMENT_SELECTOR;
+    new_pcb->context.cpu.stack.esp = new_page_dir->table[0].lower_address * PAGE_FRAME_SIZE;
 
     // setup metadata
     new_pcb->metadata.pid = p_index;
