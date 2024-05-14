@@ -62,4 +62,6 @@ int strlen(char * str);
 
 int contains(char * str, char c, int n);
 
+void itoa(int32_t value, char *result);
+
 #endif

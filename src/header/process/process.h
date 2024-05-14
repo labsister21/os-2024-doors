@@ -89,6 +89,7 @@ struct ProcessControlBlock
     {
         uint32_t pid;
         PROCESS_STATE state;
+        char process_name[8];
     } metadata;
     struct Context context;
     struct
@@ -97,6 +98,19 @@ struct ProcessControlBlock
         uint32_t page_frame_used_count;
     } memory;
 };
+
+struct ProcessList
+{
+    struct
+    {
+        uint32_t pid;
+        PROCESS_STATE state;
+        char process_name[8];
+    } metadata[PROCESS_COUNT_MAX];
+    uint32_t size;
+};
+
+extern struct ProcessList metadata_list;
 
 extern struct ProcessControlBlock _process_list[PROCESS_COUNT_MAX];
 
@@ -126,5 +140,9 @@ int32_t process_create_user_process(struct FAT32DriverRequest request);
 bool process_destroy(uint32_t pid);
 
 int32_t process_list_get_inactive_index();
+
+void process_exit();
+
+struct ProcessList get_process_list();
 
 #endif

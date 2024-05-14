@@ -120,9 +120,9 @@ bool paging_free_user_page_frame(struct PageDirectory *page_dir, void *virtual_a
         // page_dir->table[page_table_index].lower_address = 0;
         // page_dir->table[page_table_index].flag.write_bit = 0;
         // page_dir->table[page_table_index].flag.user_supervisor = 0;
+        flush_single_tlb(virtual_addr);
         memset(&(page_dir->table[page_table_index]), 0, sizeof(struct PageDirectoryEntry));
         // Invalidate TLB entry for the virtual address
-        flush_single_tlb(virtual_addr);
         return true; // Deallocation succeeded
     }
     else
@@ -185,7 +185,11 @@ bool paging_free_page_directory(struct PageDirectory *page_dir)
             page_directory_manager.page_directory_used[i] = false;
             for (uint32_t j = 0; j < 1024; j++)
             {
-                if (page_dir->table[j].flag.present_bit)
+                if (j == 0x300)
+                {
+                    memset(&(page_dir->table[j]), 0, sizeof(struct PageDirectoryEntry));
+                }
+                else if (page_dir->table[j].flag.present_bit)
                 {
                     paging_free_user_page_frame(page_dir, (void *)((uint32_t)j << 22));
                 }

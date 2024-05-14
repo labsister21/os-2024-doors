@@ -9,6 +9,7 @@
 #include "header/driver/framebuffer.h"
 #include "header/cpu/gdt.h"
 #include "header/filesystem/fat32.h"
+#include "../driver/cmos.h"
 #include "../stdlib/string.h"
 
 /* -- PIC constants -- */

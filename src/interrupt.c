@@ -52,7 +52,6 @@ void main_interrupt_handler(struct InterruptFrame frame)
         ctx.eflags = frame.int_stack.eflags;
         ctx.eip = frame.int_stack.eip;
         ctx.cpu = frame.cpu;
-        pic_ack(IRQ_TIMER);
         scheduler_save_context_to_current_running_pcb(ctx);
         scheduler_switch_to_next_process();
         break;
@@ -142,6 +141,28 @@ void syscall(struct InterruptFrame frame)
         break;
     case 18:
         *(bool *)frame.cpu.general.ebx = get_is_cursor_viewable();
+        break;
+    case 19:
+        process_exit();
+        break;
+    case 20:
+        *(bool *)frame.cpu.general.ecx = process_destroy(*(uint32_t *)frame.cpu.general.ebx);
+        break;
+    case 21:
+        *(int32_t *)frame.cpu.general.ecx = process_create_user_process(*(struct FAT32DriverRequest *)frame.cpu.general.ebx);
+        break;
+    case 22:
+        *(struct ProcessList *)frame.cpu.general.ebx = get_process_list();
+        break;
+    case 23:
+        uint16_t **values = (uint16_t **)frame.cpu.general.ebx;
+        read_rtc(values[0], values[1], values[2], values[3], values[4], values[5]);
+        break;
+    case 24:
+        framebuffer_write((uint8_t)frame.cpu.general.ebx, (uint8_t)frame.cpu.general.ecx, (char)frame.cpu.general.edx, 0xA, 0);
+        break;
+    case 25:
+        *(uint32_t *)frame.cpu.general.ebx = get_timestamp();
         break;
     default:
         break;

@@ -100,7 +100,7 @@ void init_directory_table(struct FAT32DirectoryTable *dir_table, char *name, uin
 {
     char *c = "..";
     memcpy(dir_table->table[0].name, name, 8);
-    memcpy(dir_table->table[1].name, c, 2);
+    memcpy(dir_table->table[1].name, c, 3);
 
     dir_table->table[1].cluster_low = (uint16_t)parent_dir_cluster;
     dir_table->table[1].cluster_high = (uint16_t)(parent_dir_cluster >> 16);
@@ -255,8 +255,8 @@ int8_t write(struct FAT32DriverRequest request)
 
     fat32_driver_state.dir_table_buf.table[first].filesize = request.buffer_size;
     fat32_driver_state.dir_table_buf.table[first].user_attribute = 0b10101010;
-    memcpy(fat32_driver_state.dir_table_buf.table[first].name, request.name, sizeof(request.name));
-    memcpy(fat32_driver_state.dir_table_buf.table[first].ext, request.ext, sizeof(request.ext));
+    memcpy(fat32_driver_state.dir_table_buf.table[first].name, request.name, 8);
+    memcpy(fat32_driver_state.dir_table_buf.table[first].ext, request.ext, 3);
 
     // if write folder
     if (request.buffer_size == 0)

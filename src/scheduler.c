@@ -24,7 +24,6 @@ void scheduler_save_context_to_current_running_pcb(struct Context ctx)
 // assume that there's must be a process
 void scheduler_switch_to_next_process(void)
 {
-    // puts("masuk\n", 6, 0xF);
     struct ProcessControlBlock *curr = process_get_current_running_pcb_pointer();
     int idx = 0, cnt = 0;
 
@@ -47,5 +46,6 @@ void scheduler_switch_to_next_process(void)
 
     // do context switching
     paging_use_page_directory(next_process->context.page_directory_virtual_addr);
+    pic_ack(IRQ_TIMER);
     process_context_switch(next_process->context);
 }

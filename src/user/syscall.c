@@ -102,7 +102,38 @@ void is_shift_api(bool *check)
     syscall(17, (uint32_t)check, 0, 0);
 }
 
-void is_cursor_viewable(bool *check)
+void is_cursor_viewable_api(bool *check)
 {
     syscall(18, (uint32_t)check, 0, 0);
+}
+
+void destroy_process_api(uint32_t *pid, bool *check)
+{
+    syscall(20, (uint32_t)pid, (uint32_t)check, 0);
+}
+
+void create_process_api(struct FAT32DriverRequest *req, int32_t *code)
+{
+    syscall(21, (uint32_t)req, (uint32_t)code, 0);
+}
+
+void get_all_process(struct ProcessList *pl)
+{
+    syscall(22, (uint32_t)pl, 0, 0);
+}
+
+void read_rtc(uint16_t *year, uint16_t *month, uint16_t *day, uint16_t *hour, uint16_t *minute, uint16_t *second)
+{
+    uint16_t *array[] = {year, month, day, hour, minute, second};
+    syscall(23, (uint32_t)array, 0, 0);
+}
+
+void put_char_position(uint32_t row, uint32_t col, char c)
+{
+    syscall(24, (uint32_t)row, (uint32_t)col, (uint32_t)c);
+}
+
+void get_time_stamp(uint32_t * time)
+{
+    syscall(25, (uint32_t)time, 0, 0);
 }

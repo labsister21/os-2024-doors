@@ -48,4 +48,10 @@ void find(uint32_t cluster_number, char name[8], char ext[3], bool *isFound, uin
 
 void constructPath(uint32_t clusterAddress);
 
+void exec(char *filename);
+
+void kill(char *pid);
+
+void ps();
+
 #endif

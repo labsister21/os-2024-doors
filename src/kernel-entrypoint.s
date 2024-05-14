@@ -138,6 +138,6 @@ process_context_switch:
     mov ebx, [ecx+16]
     mov edx, [ecx+20]
     mov eax, [ecx+28]
-    mov ecx, [ecx+32]
+    mov ecx, [ecx+24]
 
     iret

@@ -23,7 +23,7 @@ void type_command()
     get_keyboard_char(&buf);
 
     bool check;
-    is_cursor_viewable(&check);
+    is_cursor_viewable_api(&check);
 
     if (buf == '\b' && check)
     {
@@ -208,6 +208,34 @@ void run_command()
         else if (memcmp(cmd, "help", cmd_len) == 0 && cmd_len == 4)
         {
             help();
+        }
+        else if (memcmp(cmd, "ps", cmd_len) == 0 && cmd_len == 2)
+        {
+            ps();
+        }
+        else if (memcmp(cmd, "kill", cmd_len) == 0 && cmd_len == 4)
+        {
+            // ps();
+            if (strlen(buf[1]) == 0)
+            {
+                put_chars("Expected process identifier\n", 29, 0xC);
+            }
+            else
+            {
+                kill(buf[1]);
+            }
+        }
+        else if (memcmp(cmd, "exec", cmd_len) == 0 && cmd_len == 4)
+        {
+            // ps();
+            if (strlen(buf[1]) == 0)
+            {
+                put_chars("Expected binary file name\n", 27, 0xC);
+            }
+            else
+            {
+                exec(buf[1]);
+            }
         }
         else if (memcmp(cmd, "find", cmd_len) == 0)
         {
@@ -1028,4 +1056,108 @@ void constructPath(uint32_t cluster_number)
     //     put_char('/', 0xC);
     //     put_chars(table.table[0].name, strlen(table.table[0].name), 0xC);
     // }
+}
+
+void exec(char *filename)
+{
+    struct FAT32DriverRequest req = {
+        .buf = (uint8_t *)0,
+        .buffer_size = 0x100000,
+        .ext = "\0\0\0",
+        .parent_cluster_number = state.work_dir,
+    };
+    memcpy(req.name, filename, strlen(filename));
+
+    int32_t code;
+    create_process_api(&req, &code);
+
+    if (code == 0)
+    {
+        put_chars("Process created succesfully\n", 29, 0xF);
+    }
+    else if (code == 1)
+    {
+        put_chars("Maximum process exceeded\n", 26, 0xC);
+    }
+    else if (code == 2)
+    {
+        put_chars("Invalid entrypoint\n", 20, 0xC);
+    }
+    else if (code == 3)
+    {
+        put_chars("Not enough memory\n", 19, 0xC);
+    }
+    else
+    {
+        put_chars("File system read failure\n", 26, 0xC);
+    }
+}
+
+void kill(char *pid)
+{
+    uint32_t id;
+    if (strlen(pid) == 1)
+    {
+        id = *pid - '0';
+    }
+    else if (strlen(pid) == 2)
+    {
+        id = (pid[0] - '0') * 10 + (pid[1] - '0');
+    }
+    else
+    {
+        put_chars("Maximum process identifier is 16\n", 34, 0xC);
+        return;
+    }
+
+    bool check;
+    destroy_process_api(&id, &check);
+
+    if (!check)
+    {
+        put_chars("Fail to kill process\n", 22, 0xC);
+    }
+    else
+    {
+        put_chars("Process killed succesfully\n", 28, 0xF);
+    }
+}
+
+void ps()
+{
+    struct ProcessList pl;
+    get_all_process(&pl);
+
+    if (pl.size == 0)
+    {
+        put_chars("No process currently available\n", 32, 0xC);
+    }
+    else
+    {
+        put_chars("pid     name     state\n", 24, 0xF);
+        put_chars("======================\n", 24, 0xF);
+        for (uint32_t i = 0; i < pl.size; i++)
+        {
+            // print pid
+            put_char(pl.metadata[i].pid + '0', 0xF);
+            set_cursor_col(8);
+
+            // print name
+            put_chars(pl.metadata[i].process_name, 8, 0xF);
+            set_cursor_col(17);
+
+            if (pl.metadata[i].state == RUNNING)
+            {
+                put_chars("RUNNING\n", 9, 0xF);
+            }
+            else if (pl.metadata[i].state == READY)
+            {
+                put_chars("READY\n", 7, 0xF);
+            }
+            else
+            {
+                put_chars("BLOCKED\n", 9, 0xF);
+            }
+        }
+    }
 }

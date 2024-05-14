@@ -5,6 +5,8 @@
 
 struct ProcessControlBlock _process_list[PROCESS_COUNT_MAX];
 
+struct ProcessList metadata_list;
+
 static struct ProcessManagerState process_manager_state = {
     .active_process_count = 0,
     .pid_used = {false}};
@@ -81,13 +83,14 @@ int32_t process_create_user_process(struct FAT32DriverRequest request)
     new_pcb->context.cpu.segment.es = GDT_USER_DATA_SEGMENT_SELECTOR;
     new_pcb->context.cpu.segment.fs = GDT_USER_DATA_SEGMENT_SELECTOR;
     new_pcb->context.cpu.segment.gs = GDT_USER_DATA_SEGMENT_SELECTOR;
-    new_pcb->context.cpu.stack.esp = new_page_dir->table[0].lower_address * PAGE_FRAME_SIZE;
+    new_pcb->context.cpu.stack.esp = PAGE_FRAME_SIZE;
 
     // setup metadata
+    memcpy(new_pcb->metadata.process_name, request.name, 8);
     new_pcb->metadata.pid = p_index;
     new_pcb->metadata.state = READY;
 
-    paging_use_page_directory(new_page_dir);
+    paging_use_page_directory(curr_dir);
 exit_cleanup:
     return retcode;
 }
@@ -122,7 +125,7 @@ struct ProcessControlBlock *process_get_current_running_pcb_pointer(void)
 bool process_destroy(uint32_t pid)
 {
     // TODO: implement process destroy
-    if (pid < PROCESS_COUNT_MAX)
+    if (pid >= PROCESS_COUNT_MAX)
         return false;
     if (!process_manager_state.pid_used[pid])
         return false;
@@ -142,4 +145,28 @@ bool process_destroy(uint32_t pid)
     process_manager_state.pid_used[pid] = false;
     process_manager_state.active_process_count--;
     return true;
+}
+
+void process_exit()
+{
+    struct ProcessControlBlock *curr = process_get_current_running_pcb_pointer();
+    if (curr != NULL)
+        process_destroy(curr->metadata.pid);
+}
+
+struct ProcessList get_process_list()
+{
+    int cnt = 0;
+    for (int i = 0; i < PROCESS_COUNT_MAX; i++)
+    {
+        if (process_manager_state.pid_used[i])
+        {
+            metadata_list.metadata[cnt].pid = _process_list[i].metadata.pid;
+            metadata_list.metadata[cnt].state = _process_list[i].metadata.state;
+            memcpy(metadata_list.metadata[cnt].process_name, _process_list[i].metadata.process_name, 8);
+            cnt++;
+        }
+    }
+    metadata_list.size = cnt;
+    return metadata_list;
 }
