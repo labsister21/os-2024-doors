@@ -44,9 +44,9 @@ void help();
 
 void print_int(uint32_t num);
 
-void find(uint32_t cluster_number, char name[8], char ext[3], bool *isFound, uint8_t *banyak);
+void find(uint32_t cluster_number, char name[8], char ext[3], bool *isFound, char curr_path[256]);
 
-void constructPath(uint32_t clusterAddress);
+// void constructPath(uint32_t clusterAddress);
 
 void exec(char *filename);
 

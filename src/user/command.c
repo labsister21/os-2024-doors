@@ -243,7 +243,7 @@ void run_command()
             memcpy(filename, &cmd[2], 8);
             exec(filename);
         }
-        else if (memcmp(cmd, "find", cmd_len) == 0)
+        else if (memcmp(cmd, "find", 4) == 0 && cmd_len == 4)
         {
             if (strlen(buf[1]) == 0)
             {
@@ -252,21 +252,16 @@ void run_command()
             }
             else
             {
-                // handle dir name too long
-
                 char split_dirname[16][256] = {0};
                 strsplit(buf[1], '.', split_dirname);
                 char name[8] = {0};
                 char ext[3] = {"\0\0\0"};
-
                 memcpy(name, split_dirname[0], 8);
                 memcpy(ext, split_dirname[1], 3);
-
+                char curr_path[256];
+                memcpy(curr_path, "~/", 2);
                 bool isFound = false;
-                uint8_t banyak = 0;
-                put_chars("this\n", 6, 0xc);
-                find(ROOT_CLUSTER_NUMBER, name, ext, &isFound, &banyak);
-                put_chars("that\n", 6, 0xc);
+                find(ROOT_CLUSTER_NUMBER, name, ext, &isFound, curr_path);
 
                 if (!isFound)
                 {
@@ -297,7 +292,8 @@ void ls()
     put_chars("=====================================\n", 39, 0xF);
 
     // get directory table
-    struct FAT32DirectoryTable table;
+    struct FAT32DirectoryTable table = {
+        .table = {}};
     read_clusters_api(&table, state.work_dir, 1);
 
     for (int i = 2; i < 64; i++)
@@ -337,7 +333,8 @@ void ls()
 
 void cd(char *name)
 {
-    struct FAT32DirectoryTable table;
+    struct FAT32DirectoryTable table = {
+        .table = {}};
     struct FAT32DriverRequest request = {
         .buf = &table,
         .ext = "\0\0\0",
@@ -400,9 +397,10 @@ void mkdir(char *name)
         put_chars(" contains '.' which is not allowed.\n", 36, 0xC);
         return;
     }
-    struct FAT32DirectoryTable table;
+    struct FAT32DirectoryTable tbl = {
+        .table = {}};
     struct FAT32DriverRequest request = {
-        .buf = &table,
+        .buf = &tbl,
         .ext = "\0\0\0",
         .parent_cluster_number = state.work_dir,
         .buffer_size = 0};
@@ -456,7 +454,10 @@ void rm(char *filename)
     char filename_buf[16][256] = {0};
     strsplit(filename, '.', filename_buf);
 
+    struct ClusterBuffer cb;
+
     struct FAT32DriverRequest req = {
+        .buf = &cb,
         .parent_cluster_number = state.work_dir,
     };
     memcpy(req.name, filename_buf[0], 8);
@@ -500,10 +501,11 @@ void rm_rec(char *foldername)
         put_chars("Recursive flag can only be applied to directory\n", 49, 0xC);
         return;
     }
-
+    struct ClusterBuffer cb;
     struct FAT32DriverRequest req = {
         .parent_cluster_number = state.work_dir,
-        .buffer_size = 0};
+        .buffer_size = 0,
+        .buf = &cb};
     memcpy(req.name, filename_buf[0], 8);
     uint32_t code;
 
@@ -537,7 +539,8 @@ void rm_rec(char *foldername)
 
 void cat(char *filename)
 {
-    struct FAT32DirectoryTable table;
+    struct FAT32DirectoryTable table = {
+        .table = {}};
     struct FAT32DriverRequest req = {
         .buf = &table,
         .parent_cluster_number = state.work_dir,
@@ -583,7 +586,9 @@ void mv(char *src, char *dest)
     char dest_buf[16][256] = {0};
     strsplit(dest, '.', dest_buf);
     // check source
+    struct ClusterBuffer temp;
     struct FAT32DriverRequest src_req = {
+        .buf = &temp,
         .parent_cluster_number = state.work_dir,
         .buffer_size = 0,
     };
@@ -594,6 +599,7 @@ void mv(char *src, char *dest)
 
     // check dest
     struct FAT32DriverRequest dest_req = {
+        .buf = &temp,
         .parent_cluster_number = state.work_dir,
         .buffer_size = 0,
     };
@@ -617,6 +623,7 @@ void mv(char *src, char *dest)
             }
 
             struct FAT32DriverRequest new_req = {
+                .buf = &temp,
                 .parent_cluster_number = dest_cluster,
             };
             memcpy(new_req.name, src_buf[0], 8);
@@ -675,6 +682,7 @@ void mv(char *src, char *dest)
         uint32_t new_dest_code;
 
         struct FAT32DriverRequest dr = {
+            .buf = &temp,
             .buffer_size = 0,
             .parent_cluster_number = state.work_dir,
             .ext = "\0\0\0",
@@ -732,8 +740,10 @@ void cp(char *src, char *dest)
     char dest_buf[16][256] = {0};
     strsplit(dest, '.', dest_buf);
 
+    struct ClusterBuffer temp;
     // check source
     struct FAT32DriverRequest src_req = {
+        .buf = &temp,
         .parent_cluster_number = state.work_dir,
     };
     memcpy(src_req.name, src_buf[0], 8);
@@ -743,6 +753,7 @@ void cp(char *src, char *dest)
 
     // check dest
     struct FAT32DriverRequest dest_req = {
+        .buf = &temp,
         .parent_cluster_number = state.work_dir,
     };
     memcpy(dest_req.name, dest_buf[0], 8);
@@ -780,6 +791,7 @@ void cp(char *src, char *dest)
         get_cluster_number_api(&dest_req, &dest_cluster);
 
         struct FAT32DriverRequest new_req = {
+            .buf = &temp,
             .parent_cluster_number = dest_cluster,
         };
         memcpy(new_req.name, src_buf[0], 8);
@@ -827,8 +839,11 @@ void cp_rec(char *src, char *dest)
     char dest_buf[16][256] = {0};
     strsplit(dest, '.', dest_buf);
 
+    struct ClusterBuffer temp;
+
     // check source
     struct FAT32DriverRequest src_req = {
+        .buf = &temp,
         .parent_cluster_number = state.work_dir,
         .buffer_size = 0};
     memcpy(src_req.name, src_buf[0], 8);
@@ -838,6 +853,7 @@ void cp_rec(char *src, char *dest)
 
     // check dest
     struct FAT32DriverRequest dest_req = {
+        .buf = &temp,
         .parent_cluster_number = state.work_dir,
         .buffer_size = 0};
     memcpy(dest_req.name, dest_buf[0], 8);
@@ -875,6 +891,7 @@ void cp_rec(char *src, char *dest)
             uint32_t new_dest_code;
             // create new subdirectory in dest dir
             struct FAT32DriverRequest dr = {
+                .buf = &temp,
                 .buffer_size = 0,
                 .parent_cluster_number = dest_cluster,
                 .ext = "\0\0\0",
@@ -927,6 +944,7 @@ void cp_rec(char *src, char *dest)
 
             // create new directory
             struct FAT32DriverRequest dr = {
+                .buf = &temp,
                 .buffer_size = 0,
                 .parent_cluster_number = state.work_dir,
                 .ext = "\0\0\0",
@@ -1011,58 +1029,39 @@ void print_int(uint32_t num)
     }
 }
 
-void find(uint32_t cluster_number, char name[8], char ext[3], bool *isFound, uint8_t *banyak)
+void find(uint32_t cluster_number, char name[8], char ext[3], bool *isFound, char curr_path[256])
 {
-    struct FAT32DirectoryTable table;
+    struct FAT32DirectoryTable table = {
+        .table = {}};
     read_clusters_api(&table, cluster_number, 1);
 
     for (size_t i = 2; i < CLUSTER_SIZE / sizeof(struct FAT32DirectoryEntry); i++)
     {
-        uint32_t cluster_number = (table.table[i].cluster_high << 16) | table.table[i].cluster_low;
+        if (!(table.table[i].user_attribute & UATTR_NOT_EMPTY))
+            continue;
         if ((memcmp(table.table[i].name, name, 8) == 0) && memcmp(table.table[i].ext, ext, 3) == 0)
         {
-            *banyak += 1;
             *isFound = 1;
-            put_char(' ', 0xC);
+            put_chars(curr_path, strlen(curr_path), 0xF);
+            put_chars(name, 8, 0xF);
 
-            if (!(table.table[i].attribute & ATTR_SUBDIRECTORY))
+            if (!(table.table[i].attribute & ATTR_SUBDIRECTORY) && memcmp(table.table[i].ext, "\0\0\0", 3) != 0)
             {
-                constructPath(cluster_number);
-                put_char('/', 0xC);
-                put_chars(table.table[i].name, strlen(table.table[i].name), 0xC);
-                if (memcmp(table.table[i].ext, "\0\0\0", 3) != 0) // file
-                {
-                    put_char('.', 0xC);
-                    put_chars(table.table[i].ext, strlen(table.table[i].ext), 0xC);
-                }
+                put_char('.', 0xF);
+                put_chars(ext, 3, 0xF);
             }
-            else
-            {
-                constructPath(cluster_number);
-            }
+            put_char('\n', 0xF);
         }
         if (table.table[i].attribute & ATTR_SUBDIRECTORY)
         {
-            find(cluster_number, name, ext, isFound, banyak);
+            uint32_t curr_cluster_number = (table.table[i].cluster_high << 16) | table.table[i].cluster_low;
+            char new_path[256];
+            memcpy(new_path, curr_path, 256);
+            strcat(new_path, table.table[i].name);
+            strcat(new_path, "/");
+            find(curr_cluster_number, name, ext, isFound, new_path);
         }
     }
-}
-
-void constructPath(uint32_t cluster_number)
-{
-    struct FAT32DirectoryTable table;
-    read_clusters_api(&table, cluster_number, 1);
-
-    /**
-     * TODO: implement
-     */
-    // if (memcmp(table.table[0].name, "root\0\0\0", 8) != 0)
-    // {
-    //     uint32_t parent_cluster = (table.table[0].cluster_high << 16) | table.table[0].cluster_low;
-    //     constructPath(parent_cluster);
-    //     put_char('/', 0xC);
-    //     put_chars(table.table[0].name, strlen(table.table[0].name), 0xC);
-    // }
 }
 
 void exec(char *filename)

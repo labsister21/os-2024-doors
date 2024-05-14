@@ -46,6 +46,5 @@ void scheduler_switch_to_next_process(void)
 
     // do context switching
     paging_use_page_directory(next_process->context.page_directory_virtual_addr);
-    pic_ack(IRQ_TIMER);
     process_context_switch(next_process->context);
 }

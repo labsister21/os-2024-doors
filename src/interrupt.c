@@ -53,6 +53,7 @@ void main_interrupt_handler(struct InterruptFrame frame)
         ctx.eip = frame.int_stack.eip;
         ctx.cpu = frame.cpu;
         scheduler_save_context_to_current_running_pcb(ctx);
+        pic_ack(IRQ_TIMER);
         scheduler_switch_to_next_process();
         break;
     case 0x30:
