@@ -237,6 +237,12 @@ void run_command()
                 exec(buf[1]);
             }
         }
+        else if (memcmp(cmd, "./", 2) == 0)
+        {
+            char filename[8];
+            memcpy(filename, &cmd[2], 8);
+            exec(filename);
+        }
         else if (memcmp(cmd, "find", cmd_len) == 0)
         {
             if (strlen(buf[1]) == 0)
@@ -383,7 +389,8 @@ void mkdir(char *name)
 {
     if (strlen(name) > 8)
     {
-        put_chars("The maximum length of folder name is 8 characters.\n", 51, 0xF);
+        put_chars("The maximum length of folder name is 8 characters.\n", 51, 0xC);
+        return;
     }
     if (contains(name, '.', strlen(name)))
     {
