@@ -42,7 +42,6 @@ void type_command()
     {
         bool check;
         is_shift_api(&check);
-        // put_char(check + '0', 0xF);
         if (check)
         {
             move_screen_api(buf);
@@ -68,7 +67,7 @@ void run_command()
         char buf[16][256] = {0};
         strsplit(state.curr_command_buffer, ' ', buf);
 
-        char cmd[256];
+        char cmd[256] = {0};
         memcpy(cmd, buf[0], 256);
 
         int cmd_len = strlen(cmd);
@@ -239,7 +238,7 @@ void run_command()
         }
         else if (memcmp(cmd, "./", 2) == 0)
         {
-            char filename[8];
+            char filename[8] = {0};
             memcpy(filename, &cmd[2], 8);
             exec(filename);
         }
@@ -304,12 +303,12 @@ void ls()
             print_int(idx);
             set_cursor_col(7);
 
-            char curr_name[8];
+            char curr_name[8] = {0};
             memcpy(&curr_name, table.table[i].name, 8);
             put_chars(curr_name, 8, 0xF);
             set_cursor_col(16);
 
-            char curr_ext[3];
+            char curr_ext[3] = {0};
             memcpy(&curr_ext, table.table[i].ext, 3);
             put_chars(curr_ext, 3, 0xF);
             set_cursor_col(24);
@@ -451,8 +450,8 @@ void move_back(char *c)
 
 void rm(char *filename)
 {
-    char name[8];
-    char ext[3];
+    char name[8] = {0};
+    char ext[3] = {0};
     uint32_t parent_cluster = state.work_dir;
     uint32_t curr_cluster = 0;
 
@@ -486,7 +485,7 @@ void rm(char *filename)
         return;
     }
 
-    struct ClusterBuffer cb;
+    struct ClusterBuffer cb = {.buf = {0}};
     struct FAT32DriverRequest req = {
         .buf = &cb,
         .parent_cluster_number = parent_cluster,
@@ -540,8 +539,8 @@ void rm(char *filename)
 
 void rm_rec(char *foldername)
 {
-    char name[8];
-    char ext[3];
+    char name[8] = {0};
+    char ext[3] = {0};
     uint32_t parent_cluster = state.work_dir;
     uint32_t curr_cluster = 0;
 
@@ -589,7 +588,7 @@ void rm_rec(char *foldername)
         return;
     }
 
-    struct ClusterBuffer cb;
+    struct ClusterBuffer cb = {.buf = {0}};
     struct FAT32DriverRequest req = {
         .parent_cluster_number = parent_cluster,
         .buffer_size = 0,
@@ -626,8 +625,8 @@ void rm_rec(char *foldername)
 
 void cat(char *filename)
 {
-    char name[8];
-    char ext[3];
+    char name[8] = {0};
+    char ext[3] = {0};
     uint32_t parent_cluster = state.work_dir;
     uint32_t curr_cluster = 0;
 
@@ -674,7 +673,7 @@ void cat(char *filename)
         return;
     }
 
-    struct ClusterBuffer cb;
+    struct ClusterBuffer cb = {.buf = {0}};
     struct FAT32DriverRequest req = {
         .buf = &cb,
         .parent_cluster_number = parent_cluster,
@@ -711,8 +710,8 @@ void cat(char *filename)
 
 void mv(char *src, char *dest)
 {
-    char src_name[8];
-    char src_ext[3];
+    char src_name[8] = {0};
+    char src_ext[3] = {0};
     uint32_t src_parent = state.work_dir;
     uint32_t src_cluster = 0;
     int8_t check_src = get_curr_and_parent_cluster(src, &src_parent, &src_cluster, src_name, src_ext);
@@ -741,8 +740,8 @@ void mv(char *src, char *dest)
         return;
     }
 
-    char dest_name[8];
-    char dest_ext[3];
+    char dest_name[8] = {0};
+    char dest_ext[3] = {0};
     uint32_t dest_parent = state.work_dir;
     uint32_t dest_cluster = 0;
     int8_t check_dest = get_curr_and_parent_cluster(dest, &dest_parent, &dest_cluster, dest_name, dest_ext);
@@ -763,7 +762,7 @@ void mv(char *src, char *dest)
         return;
     }
 
-    struct ClusterBuffer temp;
+    struct ClusterBuffer temp = {.buf = {0}};
     struct FAT32DriverRequest src_req = {
         .buf = &temp,
         .parent_cluster_number = src_parent,
@@ -859,8 +858,8 @@ void mv(char *src, char *dest)
 
 void cp(char *src, char *dest)
 {
-    char src_name[8];
-    char src_ext[3];
+    char src_name[8] = {0};
+    char src_ext[3] = {0};
     uint32_t src_parent = state.work_dir;
     uint32_t src_cluster = 0;
     int8_t check_src = get_curr_and_parent_cluster(src, &src_parent, &src_cluster, src_name, src_ext);
@@ -894,8 +893,8 @@ void cp(char *src, char *dest)
         return;
     }
 
-    char dest_name[8];
-    char dest_ext[3];
+    char dest_name[8] = {0};
+    char dest_ext[3] = {0};
     uint32_t dest_parent = state.work_dir;
     uint32_t dest_cluster = 0;
     int8_t check_dest = get_curr_and_parent_cluster(dest, &dest_parent, &dest_cluster, dest_name, dest_ext);
@@ -916,7 +915,7 @@ void cp(char *src, char *dest)
         return;
     }
 
-    struct ClusterBuffer temp;
+    struct ClusterBuffer temp = {.buf = {0}};
     struct FAT32DriverRequest src_req = {
         .buf = &temp,
         .parent_cluster_number = src_parent,
@@ -963,8 +962,8 @@ void cp(char *src, char *dest)
 
 void cp_rec(char *src, char *dest)
 {
-    char src_name[8];
-    char src_ext[3];
+    char src_name[8] = {0};
+    char src_ext[3] = {0};
     uint32_t src_parent = state.work_dir;
     uint32_t src_cluster = 0;
     int8_t check_src = get_curr_and_parent_cluster(src, &src_parent, &src_cluster, src_name, src_ext);
@@ -998,8 +997,8 @@ void cp_rec(char *src, char *dest)
         return;
     }
 
-    char dest_name[8];
-    char dest_ext[3];
+    char dest_name[8] = {0};
+    char dest_ext[3] = {0};
     uint32_t dest_parent = state.work_dir;
     uint32_t dest_cluster = 0;
     int8_t check_dest = get_curr_and_parent_cluster(dest, &dest_parent, &dest_cluster, dest_name, dest_ext);
@@ -1025,7 +1024,7 @@ void cp_rec(char *src, char *dest)
         return;
     }
 
-    struct ClusterBuffer temp;
+    struct ClusterBuffer temp = {.buf = {0}};
     struct FAT32DriverRequest src_req = {
         .buf = &temp,
         .parent_cluster_number = src_parent,
@@ -1182,6 +1181,8 @@ int8_t get_curr_and_parent_cluster(char *path, uint32_t *parent_cluster, uint32_
         return 4;
     if (strlen(file_buf[1]) > 3)
         return 5;
+    memcpy(filename, file_buf[0], 8);
+    memcpy(ext, file_buf[1], 3);
 
     struct FAT32DirectoryTable table = {
         .table = {}};
@@ -1193,8 +1194,6 @@ int8_t get_curr_and_parent_cluster(char *path, uint32_t *parent_cluster, uint32_
         if ((memcmp(table.table[i].name, file_buf[0], 8) == 0) && memcmp(table.table[i].ext, file_buf[1], 3) == 0)
         {
             *current_cluster = (table.table[i].cluster_high << 16) | table.table[i].cluster_low;
-            memcpy(filename, file_buf[0], 8);
-            memcpy(ext, file_buf[1], 3);
             if (!(table.table[i].attribute & ATTR_SUBDIRECTORY))
                 return 0;
             else
