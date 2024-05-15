@@ -17,6 +17,7 @@ struct LineBuffer
 {
     uint8_t size;
     uint8_t line_buf[BUFFER_WIDTH_VIEW];
+    uint8_t color_buf[BUFFER_WIDTH_VIEW];
 } __attribute((packed));
 
 struct FrameBuffer
@@ -28,9 +29,14 @@ struct FrameBuffer
 extern struct FrameBuffer frame_buffer;
 
 extern int cursor_row, cursor_col, frame_row_pointer;
-extern char c;
+
+extern bool is_cursor_viewable;
+
+bool get_is_cursor_viewable();
 
 void init_frame_buffer();
+
+void put_char_color(char c, uint32_t color);
 
 /**
  * Terminal framebuffer
@@ -50,7 +56,7 @@ void init_frame_buffer();
  * @param fg  Foreground / Character color
  * @param bg  Background color
  */
-void framebuffer_write(char c, uint8_t fg, uint8_t bg);
+void framebuffer_write(uint8_t row, uint8_t col, char c, uint8_t fg, uint8_t bg);
 
 /**
  * Set cursor to specified location. Row and column starts from 0
@@ -66,16 +72,28 @@ void framebuffer_set_cursor(uint8_t r, uint8_t c);
  * Extra note: It's allowed to use different color palette for this
  *
  */
-void new_frame_buffer_view(uint8_t fg, uint16_t bg, bool change);
+void new_frame_buffer_view(bool change);
 
 void framebuffer_clear(void);
 
 void init_keyboard_state(void);
 
-void print(int row, int col);
-
 void framebuffer_erase(int *row, int *col);
 
-void typing_keyboard();
+void enable_cursor(uint8_t start, uint8_t end);
+
+void disable_cursor();
+
+void clear_screen();
+
+void put_char(char c, uint8_t fg, uint8_t bg);
+
+void puts(const char *str, uint32_t cnt, uint32_t color);
+
+void handle_new_char(char c, uint8_t fg, uint8_t bg);
+
+void set_cursor_col(uint32_t col);
+
+void move_screen(char c);
 
 #endif

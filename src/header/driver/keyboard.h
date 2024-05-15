@@ -39,6 +39,8 @@ struct KeyboardDriverState
     bool read_extended_mode;
     bool keyboard_input_on;
     bool capslock;
+    bool left_shift;
+    bool right_shift;
     char keyboard_buffer;
 } __attribute((packed));
 
@@ -53,6 +55,8 @@ void keyboard_state_deactivate(void);
 // Get keyboard buffer value and flush the buffer - @param buf Pointer to char buffer
 void get_keyboard_buffer(char *buf);
 
+bool is_shift();
+
 /* -- Keyboard Interrupt Service Routine -- */
 
 /**
@@ -60,5 +64,7 @@ void get_keyboard_buffer(char *buf);
  * Will start listen and process keyboard scancode if keyboard_input_on.
  */
 void keyboard_isr(void);
+
+bool is_keyboard_active();
 
 #endif

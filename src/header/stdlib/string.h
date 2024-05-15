@@ -52,4 +52,16 @@ int memcmp(const void *s1, const void *s2, size_t n);
 */
 void *memmove(void *dest, const void *src, size_t n);
 
+void strcat(char *dest, char *src);
+
+void strset(char* str, char c, uint8_t len);
+
+void strsplit(char* str, char delim, char result[16][256]);
+
+int strlen(char * str);
+
+int contains(char * str, char c, int n);
+
+void itoa(int32_t value, char *result);
+
 #endif
