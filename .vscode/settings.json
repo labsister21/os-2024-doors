@@ -11,6 +11,7 @@
         "keyboard.h": "c",
         "libc-header-start.h": "c",
         "typeinfo": "c",
-        "random": "c"
+        "random": "c",
+        "system_error": "c"
     },
 }

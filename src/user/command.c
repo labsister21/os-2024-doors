@@ -301,7 +301,7 @@ void ls()
         if (table.table[i].user_attribute == UATTR_NOT_EMPTY)
         {
             idx++;
-            put_char('0' + idx, 0xF);
+            print_int(idx);
             set_cursor_col(7);
 
             char curr_name[8];
@@ -451,40 +451,86 @@ void move_back(char *c)
 
 void rm(char *filename)
 {
-    char filename_buf[16][256] = {0};
-    strsplit(filename, '.', filename_buf);
+    char name[8];
+    char ext[3];
+    uint32_t parent_cluster = state.work_dir;
+    uint32_t curr_cluster = 0;
+
+    int8_t code = get_curr_and_parent_cluster(filename, &parent_cluster, &curr_cluster, name, ext);
+    if (code == 2)
+    {
+        put_chars("'", 1, 0xC);
+        put_chars(name, strlen(name), 0xC);
+        if (strlen(ext) != 0)
+        {
+            put_char('.', 0xC);
+            put_chars(ext, 3, 0xC);
+        }
+        put_chars("'", 1, 0xC);
+        put_chars(" is not found.\n", 16, 0xC);
+        return;
+    }
+    if (code == 3)
+    {
+        put_chars("Invalid Path.\n", 15, 0xC);
+        return;
+    }
+    if (code == 4)
+    {
+        put_chars("Maximum file name length is 8.\n", 32, 0xC);
+        return;
+    }
+    if (code == 5)
+    {
+        put_chars("Maximum extension name length is 3.\n", 37, 0xC);
+        return;
+    }
 
     struct ClusterBuffer cb;
-
     struct FAT32DriverRequest req = {
         .buf = &cb,
-        .parent_cluster_number = state.work_dir,
-    };
-    memcpy(req.name, filename_buf[0], 8);
-    memcpy(req.ext, filename_buf[1], 3);
+        .parent_cluster_number = parent_cluster,
+        .buffer_size = 0};
+    memcpy(req.name, name, 8);
+    memcpy(req.ext, ext, 3);
 
-    uint32_t code;
-    delete_api(&req, &code);
+    uint32_t res_code;
+    delete_api(&req, &res_code);
 
-    switch (code)
+    switch (res_code)
     {
     case 0:
         put_chars("'", 1, 0xF);
-        put_chars(filename, strlen(filename), 0xF);
+        put_chars(name, strlen(name), 0xF);
+        if (strlen(ext) != 0)
+        {
+            put_char('.', 0xF);
+            put_chars(ext, 3, 0xF);
+        }
         put_chars("'", 1, 0xF);
         put_chars(" has been deleted successfully.\n", 33, 0xF);
         break;
     case 1:
         put_chars("'", 1, 0xC);
-        put_chars(filename, strlen(filename), 0xC);
+        put_chars(name, strlen(name), 0xC);
+        if (strlen(ext) != 0)
+        {
+            put_char('.', 0xC);
+            put_chars(ext, 3, 0xC);
+        }
         put_chars("'", 1, 0xC);
         put_chars(" is not found.\n", 16, 0xC);
         break;
     case 2:
         put_chars("'", 1, 0xC);
-        put_chars(filename, strlen(filename), 0xC);
+        put_chars(name, strlen(name), 0xC);
+        if (strlen(ext) != 0)
+        {
+            put_char('.', 0xC);
+            put_chars(ext, 3, 0xC);
+        }
         put_chars("'", 1, 0xC);
-        put_chars(" is not an empty directory.\n", 29, 0xC);
+        put_chars(" is not an empty directory. Use recursive flag to delete this directory\n", 73, 0xC);
         break;
     default:
         put_chars("Unexpected error occured.\n", 27, 0xC);
@@ -494,40 +540,81 @@ void rm(char *filename)
 
 void rm_rec(char *foldername)
 {
-    char filename_buf[16][256] = {0};
-    strsplit(foldername, '.', filename_buf);
-    if (strlen(filename_buf[1]) != 0)
+    char name[8];
+    char ext[3];
+    uint32_t parent_cluster = state.work_dir;
+    uint32_t curr_cluster = 0;
+
+    int8_t code = get_curr_and_parent_cluster(foldername, &parent_cluster, &curr_cluster, name, ext);
+
+    if (code == 0)
     {
-        put_chars("Recursive flag can only be applied to directory\n", 49, 0xC);
+        put_chars("'", 1, 0xC);
+        put_chars(name, strlen(name), 0xC);
+        if (strlen(ext) != 0)
+        {
+            put_char('.', 0xC);
+            put_chars(ext, 3, 0xC);
+        }
+        put_chars("'", 1, 0xC);
+        put_chars(" is not a directory.\n", 29, 0xC);
         return;
     }
+    if (code == 2)
+    {
+        put_chars("'", 1, 0xC);
+        put_chars(name, strlen(name), 0xC);
+        if (strlen(ext) != 0)
+        {
+            put_char('.', 0xC);
+            put_chars(ext, 3, 0xC);
+        }
+        put_chars("'", 1, 0xC);
+        put_chars(" is not found.\n", 16, 0xC);
+        return;
+    }
+    if (code == 3)
+    {
+        put_chars("Invalid Path.\n", 15, 0xC);
+        return;
+    }
+    if (code == 4)
+    {
+        put_chars("Maximum file name length is 8.\n", 32, 0xC);
+        return;
+    }
+    if (code == 5)
+    {
+        put_chars("Maximum extension name length is 3.\n", 37, 0xC);
+        return;
+    }
+
     struct ClusterBuffer cb;
     struct FAT32DriverRequest req = {
-        .parent_cluster_number = state.work_dir,
+        .parent_cluster_number = parent_cluster,
         .buffer_size = 0,
-        .buf = &cb};
-    memcpy(req.name, filename_buf[0], 8);
-    uint32_t code;
-
-    delete_recursive_api(&req, &code);
-
-    switch (code)
+        .buf = &cb,
+        .ext = "\0\0\0"};
+    memcpy(req.name, name, 8);
+    uint32_t res_code;
+    delete_recursive_api(&req, &res_code);
+    switch (res_code)
     {
     case 0:
         put_chars("'", 1, 0xF);
-        put_chars(foldername, strlen(foldername), 0xF);
+        put_chars(name, strlen(name), 0xF);
         put_chars("'", 1, 0xF);
         put_chars(" has been deleted successfully.\n", 33, 0xF);
         break;
     case 1:
         put_chars("'", 1, 0xC);
-        put_chars(foldername, strlen(foldername), 0xC);
+        put_chars(name, strlen(name), 0xC);
         put_chars("'", 1, 0xC);
         put_chars(" is not a directory.\n", 29, 0xC);
         break;
     case 2:
         put_chars("'", 1, 0xC);
-        put_chars(foldername, strlen(foldername), 0xC);
+        put_chars(name, strlen(name), 0xC);
         put_chars("'", 1, 0xC);
         put_chars(" is not found.\n", 16, 0xC);
         break;
@@ -539,18 +626,61 @@ void rm_rec(char *foldername)
 
 void cat(char *filename)
 {
-    struct FAT32DirectoryTable table = {
-        .table = {}};
+    char name[8];
+    char ext[3];
+    uint32_t parent_cluster = state.work_dir;
+    uint32_t curr_cluster = 0;
+
+    int8_t check_code = get_curr_and_parent_cluster(filename, &parent_cluster, &curr_cluster, name, ext);
+    if (check_code == 1)
+    {
+        put_chars("'", 1, 0xC);
+        put_chars(name, strlen(name), 0xC);
+        if (strlen(ext) != 0)
+        {
+            put_char('.', 0xC);
+            put_chars(ext, 3, 0xC);
+        }
+        put_chars("'", 1, 0xC);
+        put_chars(" is not a file.\n", 29, 0xC);
+        return;
+    }
+    if (check_code == 2)
+    {
+        put_chars("'", 1, 0xC);
+        put_chars(name, strlen(name), 0xC);
+        if (strlen(ext) != 0)
+        {
+            put_char('.', 0xC);
+            put_chars(ext, 3, 0xC);
+        }
+        put_chars("'", 1, 0xC);
+        put_chars(" is not found.\n", 16, 0xC);
+        return;
+    }
+    if (check_code == 3)
+    {
+        put_chars("Invalid Path.\n", 15, 0xC);
+        return;
+    }
+    if (check_code == 4)
+    {
+        put_chars("Maximum file name length is 8.\n", 32, 0xC);
+        return;
+    }
+    if (check_code == 5)
+    {
+        put_chars("Maximum extension name length is 3.\n", 37, 0xC);
+        return;
+    }
+
+    struct ClusterBuffer cb;
     struct FAT32DriverRequest req = {
-        .buf = &table,
-        .parent_cluster_number = state.work_dir,
+        .buf = &cb,
+        .parent_cluster_number = parent_cluster,
         .buffer_size = CLUSTER_SIZE};
-
-    char split_filename[16][256] = {0};
-    strsplit(filename, '.', split_filename);
-
-    memcpy(req.name, split_filename[0], 8);
-    memcpy(req.ext, split_filename[1], 3);
+    memcpy(req.name, name, 8);
+    memcpy(req.ext, ext, 3);
 
     uint32_t code;
     read_file_api(&req, &code);
@@ -581,63 +711,91 @@ void cat(char *filename)
 
 void mv(char *src, char *dest)
 {
-    char src_buf[16][256] = {0};
-    strsplit(src, '.', src_buf);
-    char dest_buf[16][256] = {0};
-    strsplit(dest, '.', dest_buf);
-    // check source
+    char src_name[8];
+    char src_ext[3];
+    uint32_t src_parent = state.work_dir;
+    uint32_t src_cluster = 0;
+    int8_t check_src = get_curr_and_parent_cluster(src, &src_parent, &src_cluster, src_name, src_ext);
+
+    if (check_src == 2)
+    {
+        put_chars("'", 1, 0xC);
+        put_chars(src, strlen(src), 0xC);
+        put_chars("'", 1, 0xC);
+        put_chars(" is not found.\n", 16, 0xC);
+        return;
+    }
+    if (check_src == 3)
+    {
+        put_chars("Invalid Path.\n", 15, 0xC);
+        return;
+    }
+    if (check_src == 4)
+    {
+        put_chars("Maximum file name length is 8.\n", 32, 0xC);
+        return;
+    }
+    if (check_src == 5)
+    {
+        put_chars("Maximum extension name length is 3.\n", 37, 0xC);
+        return;
+    }
+
+    char dest_name[8];
+    char dest_ext[3];
+    uint32_t dest_parent = state.work_dir;
+    uint32_t dest_cluster = 0;
+    int8_t check_dest = get_curr_and_parent_cluster(dest, &dest_parent, &dest_cluster, dest_name, dest_ext);
+
+    if (check_dest == 3)
+    {
+        put_chars("Invalid Path.\n", 15, 0xC);
+        return;
+    }
+    if (check_dest == 4)
+    {
+        put_chars("Maximum file name length is 8.\n", 32, 0xC);
+        return;
+    }
+    if (check_dest == 5)
+    {
+        put_chars("Maximum extension name length is 3.\n", 37, 0xC);
+        return;
+    }
+
     struct ClusterBuffer temp;
     struct FAT32DriverRequest src_req = {
         .buf = &temp,
-        .parent_cluster_number = state.work_dir,
+        .parent_cluster_number = src_parent,
         .buffer_size = 0,
     };
-    memcpy(src_req.name, src_buf[0], 8);
-    memcpy(src_req.ext, src_buf[1], 3);
-    uint32_t src_code;
-    search_file_api(&src_req, &src_code);
+    memcpy(src_req.name, src_name, 8);
+    memcpy(src_req.ext, src_ext, 3);
 
-    // check dest
     struct FAT32DriverRequest dest_req = {
         .buf = &temp,
-        .parent_cluster_number = state.work_dir,
         .buffer_size = 0,
     };
-    memcpy(dest_req.name, dest_buf[0], 8);
-    memcpy(dest_req.ext, dest_buf[1], 3);
-    uint32_t dest_code;
-    search_file_api(&dest_req, &dest_code);
 
     uint32_t res;
-    if (src_code == 0)
-    {
-        if (dest_code == 1)
+    if (check_src == 0)
+    {                        // if src is file
+        if (check_dest == 1) // if dest is folder
         {
-            uint32_t dest_cluster;
-            get_cluster_number_api(&dest_req, &dest_cluster);
-
-            if (!dest_cluster)
-            {
-                put_chars("Failed to move file\n", 21, 0xC);
-                return;
-            }
-
-            struct FAT32DriverRequest new_req = {
-                .buf = &temp,
-                .parent_cluster_number = dest_cluster,
-            };
-            memcpy(new_req.name, src_buf[0], 8);
-            memcpy(new_req.ext, src_buf[1], 3);
-
-            copy_file_api(&src_req, &new_req, &res);
+            dest_req.parent_cluster_number = dest_cluster;
+            memcpy(dest_req.name, src_name, 8);
+            memcpy(dest_req.ext, src_ext, 3);
         }
-        else
+        else // if dest is file or not found
         {
-            copy_file_api(&src_req, &dest_req, &res);
+            dest_req.parent_cluster_number = dest_parent;
+            memcpy(dest_req.name, dest_name, 8);
+            memcpy(dest_req.ext, dest_ext, 3);
         }
-
-        if (res == 0)
+        copy_file_api(&src_req, &dest_req, &res);
+        switch (res)
         {
+        case 0:
             delete_api(&src_req, &res);
             put_chars("Succesfully moved file ", 24, 0xF);
             put_chars("'", 1, 0xF);
@@ -647,61 +805,38 @@ void mv(char *src, char *dest)
             put_chars("'", 1, 0xF);
             put_chars(dest, strlen(dest), 0xF);
             put_chars("'\n", 2, 0xF);
-        }
-        else
-        {
+            break;
+        default:
             put_chars("Failed to move file\n", 21, 0xC);
-            return;
+            break;
         }
     }
-    else if (src_code == 1)
+    else // src if folder
     {
-        // get src cluster number
-        uint32_t src_cluster;
-        uint32_t dest_cluster;
-        get_cluster_number_api(&src_req, &src_cluster);
-        if (!src_cluster) // src cluster not found
+        if (check_dest == 0) // target is file
         {
-            put_chars("Failed to moved folder\n", 24, 0xC);
+            put_chars("Unable to move folder to file\n", 31, 0xC);
             return;
         }
-        if (dest_code == 0) // destination is a file
+        dest_req.parent_cluster_number = dest_parent;
+        memcpy(dest_req.name, dest_name, 8);
+        memcpy(dest_req.ext, dest_ext, 3);
+        if (check_dest == 1) // target directory already exist
         {
-            put_chars("Failed to move file\n", 21, 0xC);
-            return;
-        }
-        if (dest_code == 1) // if target directory already exist
-        {
-            delete_recursive_api(&dest_req, &res); // delete target directory
+            delete_recursive_api(&dest_req, &res);
             if (res != 0)
             {
-                put_chars("Failed to move file\n", 21, 0xC);
+                put_chars("Failed to move folder\n", 23, 0xC);
                 return;
             }
         }
-        uint32_t new_dest_code;
-
-        struct FAT32DriverRequest dr = {
-            .buf = &temp,
-            .buffer_size = 0,
-            .parent_cluster_number = state.work_dir,
-            .ext = "\0\0\0",
-        };
-        memcpy(dr.name, dest, 8);
-        write_api(&dr, &new_dest_code);
-        if (new_dest_code != 0) // if write file
+        write_api(&dest_req, &res);
+        if (res != 0) // if write file
         {
             put_chars("Failed to move folder\n", 23, 0xC);
             return;
         }
-        // get new directory cluster number
-        get_cluster_number_api(&dr, &dest_cluster);
-
-        if (!dest_cluster) // dest cluster not found
-        {
-            put_chars("Failed to move folder\n", 23, 0xC);
-            return;
-        }
+        get_cluster_number_api(&dest_req, &dest_cluster);
         copy_folder_api(src_cluster, dest_cluster, &res);
         if (res == 0)
         {
@@ -715,286 +850,254 @@ void mv(char *src, char *dest)
             put_chars(dest, strlen(dest), 0xF);
             put_chars("'\n", 2, 0xF);
         }
-        else // copy failed
+        else
         {
             put_chars("Failed to copy folder\n", 23, 0xC);
         }
-    }
-    else if (src_code == 2)
-    {
-        put_chars("'", 1, 0xC);
-        put_chars(src, strlen(src), 0xC);
-        put_chars("'", 1, 0xC);
-        put_chars(" is not found.\n", 16, 0xC);
-    }
-    else
-    {
-        put_chars("Unexpected error occured\n", 26, 0xC);
     }
 }
 
 void cp(char *src, char *dest)
 {
-    char src_buf[16][256] = {0};
-    strsplit(src, '.', src_buf);
-    char dest_buf[16][256] = {0};
-    strsplit(dest, '.', dest_buf);
+    char src_name[8];
+    char src_ext[3];
+    uint32_t src_parent = state.work_dir;
+    uint32_t src_cluster = 0;
+    int8_t check_src = get_curr_and_parent_cluster(src, &src_parent, &src_cluster, src_name, src_ext);
 
-    struct ClusterBuffer temp;
-    // check source
-    struct FAT32DriverRequest src_req = {
-        .buf = &temp,
-        .parent_cluster_number = state.work_dir,
-    };
-    memcpy(src_req.name, src_buf[0], 8);
-    memcpy(src_req.ext, src_buf[1], 3);
-    uint32_t src_code;
-    search_file_api(&src_req, &src_code);
-
-    // check dest
-    struct FAT32DriverRequest dest_req = {
-        .buf = &temp,
-        .parent_cluster_number = state.work_dir,
-    };
-    memcpy(dest_req.name, dest_buf[0], 8);
-    memcpy(dest_req.ext, dest_buf[1], 3);
-    uint32_t dest_code;
-    search_file_api(&dest_req, &dest_code);
-
-    uint32_t res;
-    if (src_code == 0 && (dest_code == 0 || dest_code == 2))
+    if (check_src == 1)
     {
-        copy_file_api(&src_req, &dest_req, &res);
-        if (res == 0)
-        {
-            put_chars("Succesfully copied file ", 23, 0xF);
-            put_chars("'", 1, 0xF);
-            put_chars(src, strlen(src), 0xF);
-            put_chars("'", 1, 0xF);
-            put_chars(" to ", 4, 0xF);
-            put_chars("'", 1, 0xF);
-            put_chars(dest, strlen(dest), 0xF);
-            put_chars("'\n", 2, 0xF);
-        }
-        else
-        {
-            put_chars("Failed to copy file\n", 21, 0xC);
-        }
+        put_chars("Unable to copy directory without recursive flag\n", 49, 0xC);
+        return;
     }
-    else if (src_code == 1 && dest_code == 2)
-    {
-        put_chars("Use recursive flag to copy directory\n", 38, 0xC);
-    }
-    else if (src_code == 0 && dest_code == 1)
-    {
-        uint32_t dest_cluster;
-        get_cluster_number_api(&dest_req, &dest_cluster);
-
-        struct FAT32DriverRequest new_req = {
-            .buf = &temp,
-            .parent_cluster_number = dest_cluster,
-        };
-        memcpy(new_req.name, src_buf[0], 8);
-        memcpy(new_req.ext, src_buf[1], 3);
-
-        copy_file_api(&src_req, &new_req, &res);
-
-        if (res == 0)
-        {
-            put_chars("Succesfully copied file ", 23, 0xF);
-            put_chars("'", 1, 0xF);
-            put_chars(src, strlen(src), 0xF);
-            put_chars("'", 1, 0xF);
-            put_chars(" to ", 5, 0xF);
-            put_chars("'", 1, 0xF);
-            put_chars(dest, strlen(dest), 0xF);
-            put_chars("'\n", 2, 0xF);
-        }
-        else
-        {
-            put_chars("Failed to copy file\n", 21, 0xC);
-        }
-    }
-    else if (src_code == 1 && dest_code == 0) // handle file
-    {
-        put_chars("Failed to copy file\n", 21, 0xC);
-    }
-    else if (src_code == 2)
+    if (check_src == 2)
     {
         put_chars("'", 1, 0xC);
         put_chars(src, strlen(src), 0xC);
         put_chars("'", 1, 0xC);
         put_chars(" is not found.\n", 16, 0xC);
+        return;
+    }
+    if (check_src == 3)
+    {
+        put_chars("Invalid Path.\n", 15, 0xC);
+        return;
+    }
+    if (check_src == 4)
+    {
+        put_chars("Maximum file name length is 8.\n", 32, 0xC);
+        return;
+    }
+    if (check_src == 5)
+    {
+        put_chars("Maximum extension name length is 3.\n", 37, 0xC);
+        return;
+    }
+
+    char dest_name[8];
+    char dest_ext[3];
+    uint32_t dest_parent = state.work_dir;
+    uint32_t dest_cluster = 0;
+    int8_t check_dest = get_curr_and_parent_cluster(dest, &dest_parent, &dest_cluster, dest_name, dest_ext);
+
+    if (check_dest == 3)
+    {
+        put_chars("Invalid Path.\n", 15, 0xC);
+        return;
+    }
+    if (check_dest == 4)
+    {
+        put_chars("Maximum file name length is 8.\n", 32, 0xC);
+        return;
+    }
+    if (check_dest == 5)
+    {
+        put_chars("Maximum extension name length is 3.\n", 37, 0xC);
+        return;
+    }
+
+    struct ClusterBuffer temp;
+    struct FAT32DriverRequest src_req = {
+        .buf = &temp,
+        .parent_cluster_number = src_parent,
+        .buffer_size = 0,
+    };
+    memcpy(src_req.name, src_name, 8);
+    memcpy(src_req.ext, src_ext, 3);
+
+    struct FAT32DriverRequest dest_req = {
+        .buf = &temp,
+        .buffer_size = 0,
+    };
+
+    uint32_t res;
+    if (check_dest == 0 || check_dest == 2) // if target is file or not found
+    {
+        dest_req.parent_cluster_number = dest_parent;
+        memcpy(dest_req.name, dest_name, 8);
+        memcpy(dest_req.ext, dest_ext, 3);
+    }
+    else // if target is folder
+    {
+        dest_req.parent_cluster_number = dest_cluster;
+        memcpy(dest_req.name, src_name, 8);
+        memcpy(dest_req.ext, src_ext, 3);
+    }
+    copy_file_api(&src_req, &dest_req, &res);
+    if (res == 0)
+    {
+        put_chars("Succesfully copied file ", 23, 0xF);
+        put_chars("'", 1, 0xF);
+        put_chars(src, strlen(src), 0xF);
+        put_chars("'", 1, 0xF);
+        put_chars(" to ", 4, 0xF);
+        put_chars("'", 1, 0xF);
+        put_chars(dest, strlen(dest), 0xF);
+        put_chars("'\n", 2, 0xF);
     }
     else
     {
-        put_chars("Unexpected error occured\n", 26, 0xC);
+        put_chars("Failed to copy file\n", 21, 0xC);
     }
 }
 
 void cp_rec(char *src, char *dest)
 {
-    char src_buf[16][256] = {0};
-    strsplit(src, '.', src_buf);
-    char dest_buf[16][256] = {0};
-    strsplit(dest, '.', dest_buf);
+    char src_name[8];
+    char src_ext[3];
+    uint32_t src_parent = state.work_dir;
+    uint32_t src_cluster = 0;
+    int8_t check_src = get_curr_and_parent_cluster(src, &src_parent, &src_cluster, src_name, src_ext);
 
-    struct ClusterBuffer temp;
-
-    // check source
-    struct FAT32DriverRequest src_req = {
-        .buf = &temp,
-        .parent_cluster_number = state.work_dir,
-        .buffer_size = 0};
-    memcpy(src_req.name, src_buf[0], 8);
-    memcpy(src_req.ext, src_buf[1], 3);
-    uint32_t src_code;
-    search_file_api(&src_req, &src_code);
-
-    // check dest
-    struct FAT32DriverRequest dest_req = {
-        .buf = &temp,
-        .parent_cluster_number = state.work_dir,
-        .buffer_size = 0};
-    memcpy(dest_req.name, dest_buf[0], 8);
-    memcpy(dest_req.ext, dest_buf[1], 3);
-    uint32_t dest_code;
-    search_file_api(&dest_req, &dest_code);
-
-    uint32_t res;
-    if (src_code == 2)
+    if (check_src == 0)
+    {
+        put_chars("Unable to copy file with recursive flag\n", 41, 0xC);
+        return;
+    }
+    if (check_src == 2)
     {
         put_chars("'", 1, 0xC);
         put_chars(src, strlen(src), 0xC);
         put_chars("'", 1, 0xC);
-        put_chars(" is not found.\n", 15, 0xC);
+        put_chars(" is not found.\n", 16, 0xC);
+        return;
     }
-    else if (src_code == 0 || dest_code == 0)
+    if (check_src == 3)
     {
-        put_chars("Recursive flag can only be applied to directory\n", 49, 0xC);
+        put_chars("Invalid Path.\n", 15, 0xC);
+        return;
     }
-    else if (src_code == 1)
+    if (check_src == 4)
     {
-        uint32_t src_cluster;
-        uint32_t dest_cluster;
-        get_cluster_number_api(&src_req, &src_cluster);
+        put_chars("Maximum file name length is 8.\n", 32, 0xC);
+        return;
+    }
+    if (check_src == 5)
+    {
+        put_chars("Maximum extension name length is 3.\n", 37, 0xC);
+        return;
+    }
 
-        if (dest_code == 1)
-        {
-            get_cluster_number_api(&dest_req, &dest_cluster);
-            if (!src_cluster || !dest_cluster)
-            {
-                put_chars("Failed to copy folder\n", 23, 0xC);
-                return;
-            }
+    char dest_name[8];
+    char dest_ext[3];
+    uint32_t dest_parent = state.work_dir;
+    uint32_t dest_cluster = 0;
+    int8_t check_dest = get_curr_and_parent_cluster(dest, &dest_parent, &dest_cluster, dest_name, dest_ext);
 
-            uint32_t new_dest_code;
-            // create new subdirectory in dest dir
-            struct FAT32DriverRequest dr = {
-                .buf = &temp,
-                .buffer_size = 0,
-                .parent_cluster_number = dest_cluster,
-                .ext = "\0\0\0",
-            };
-            memcpy(dr.name, src, 8);
-            write_api(&dr, &new_dest_code);
+    if (check_dest == 0)
+    {
+        put_chars("Unable to copy directory to file.\n", 35, 0xC);
+        return;
+    }
+    if (check_dest == 3)
+    {
+        put_chars("Invalid Path.\n", 15, 0xC);
+        return;
+    }
+    if (check_dest == 4)
+    {
+        put_chars("Maximum file name length is 8.\n", 32, 0xC);
+        return;
+    }
+    if (check_dest == 5)
+    {
+        put_chars("Maximum extension name length is 3.\n", 37, 0xC);
+        return;
+    }
 
-            if (new_dest_code != 0)
-            {
-                put_chars("Failed to copy folder\n", 23, 0xC);
-                return;
-            }
+    struct ClusterBuffer temp;
+    struct FAT32DriverRequest src_req = {
+        .buf = &temp,
+        .parent_cluster_number = src_parent,
+        .buffer_size = 0,
+    };
+    memcpy(src_req.name, src_name, 8);
+    memcpy(src_req.ext, src_ext, 3);
 
-            // get new subdir cluster
-            uint32_t new_dest_cluster;
-            get_cluster_number_api(&dr, &new_dest_cluster);
+    struct FAT32DriverRequest dest_req = {
+        .buf = &temp,
+        .buffer_size = 0,
+    };
 
-            if (!new_dest_cluster)
-            {
-                put_chars("Failed to copy folder\n", 23, 0xC);
-                return;
-            }
-
-            // copy folder
-            copy_folder_api(src_cluster, new_dest_cluster, &res);
-            if (res == 0)
-            {
-                put_chars("Succesfully copied folder ", 27, 0xF);
-                put_chars("'", 1, 0xF);
-                put_chars(src, strlen(src), 0xF);
-                put_chars("'", 1, 0xF);
-                put_chars(" to ", 4, 0xF);
-                put_chars("'", 1, 0xF);
-                put_chars(dest, strlen(dest), 0xF);
-                put_chars("'\n", 2, 0xF);
-            }
-            else // copy failed
-            {
-                put_chars("Failed to copy folder\n", 23, 0xC);
-            }
-        }
-        else if (dest_code == 2)
-        {
-            if (!src_cluster) // src cluster not found
-            {
-                put_chars("Failed to copy folder\n", 23, 0xC);
-                return;
-            }
-            uint32_t new_dest_code;
-
-            // create new directory
-            struct FAT32DriverRequest dr = {
-                .buf = &temp,
-                .buffer_size = 0,
-                .parent_cluster_number = state.work_dir,
-                .ext = "\0\0\0",
-            };
-            memcpy(dr.name, dest, 8);
-            write_api(&dr, &new_dest_code);
-
-            if (new_dest_code != 0) // if write file
-            {
-                put_chars("Failed to copy folder\n", 23, 0xC);
-                return;
-            }
-
-            // get new directory cluster number
-            get_cluster_number_api(&dr, &dest_cluster);
-
-            if (!dest_cluster) // dest cluster not found
-            {
-                put_chars("Failed to copy folder\n", 23, 0xC);
-                return;
-            }
-            // copy folder
-            copy_folder_api(src_cluster, dest_cluster, &res);
-            if (res == 0)
-            {
-                put_chars("Succesfully copied folder ", 27, 0xF);
-                put_chars("'", 1, 0xF);
-                put_chars(src, strlen(src), 0xF);
-                put_chars("'", 1, 0xF);
-                put_chars(" to ", 4, 0xF);
-                put_chars("'", 1, 0xF);
-                put_chars(dest, strlen(dest), 0xF);
-                put_chars("'\n", 2, 0xF);
-            }
-            else // copy failed
-            {
-                put_chars("Failed to copy folder\n", 23, 0xC);
-            }
-        }
-        else
+    uint32_t res;
+    if (check_dest == 1) // if target folder already exist
+    {
+        // create new subdirectory in destination dir
+        struct FAT32DriverRequest dr = {
+            .buf = &temp,
+            .buffer_size = 0,
+            .parent_cluster_number = dest_cluster,
+            .ext = "\0\0\0",
+        };
+        memcpy(dr.name, src_name, 8);
+        write_api(&dr, &res);
+        if (res != 0)
         {
             put_chars("Failed to copy folder\n", 23, 0xC);
+            return;
         }
+
+        // get new directory cluster number
+        uint32_t new_dest_cluster;
+        get_cluster_number_api(&dr, &new_dest_cluster);
+        if (!new_dest_cluster)
+        {
+            put_chars("Failed to copy folder\n", 23, 0xC);
+            return;
+        }
+        copy_folder_api(src_cluster, new_dest_cluster, &res);
     }
-    else
+    else // if target folder does not exist
+    {
+        // create folder
+        memcpy(dest_req.name, dest_name, 8);
+        memcpy(dest_req.ext, dest_ext, 3);
+        dest_req.parent_cluster_number = dest_parent;
+        write_api(&dest_req, &res);
+        if (res != 0) // if write file failed
+        {
+            put_chars("Failed to copy folder\n", 23, 0xC);
+            return;
+        }
+        get_cluster_number_api(&src_req, &dest_cluster);
+        copy_folder_api(src_cluster, dest_cluster, &res);
+    }
+    if (res == 0)
+    {
+        put_chars("Succesfully copied folder ", 27, 0xF);
+        put_chars("'", 1, 0xF);
+        put_chars(src, strlen(src), 0xF);
+        put_chars("'", 1, 0xF);
+        put_chars(" to ", 4, 0xF);
+        put_chars("'", 1, 0xF);
+        put_chars(dest, strlen(dest), 0xF);
+        put_chars("'\n", 2, 0xF);
+    }
+    else // copy failed
     {
         put_chars("Failed to copy folder\n", 23, 0xC);
     }
 }
-
 void help()
 {
     put_chars("Available commands: \n", 22, 0xB);
@@ -1007,7 +1110,7 @@ void help()
     put_chars("mkdir dirname         create new directory\n", 44, 0xB);
     put_chars("mv source dest        move file/folder to destination\n", 55, 0xB);
     put_chars("rm [-r] target        delete folder/ file\n", 43, 0xB);
-    put_chars("whereis name          find file/folder with given name\n", 56, 0xB);
+    put_chars("find name             find file/folder with given name\n", 56, 0xB);
 }
 
 void print_int(uint32_t num)
@@ -1027,6 +1130,78 @@ void print_int(uint32_t num)
         put_char((temp % 10) + '0', 0xF);
         temp /= 10;
     }
+}
+
+int8_t get_curr_and_parent_cluster(char *path, uint32_t *parent_cluster, uint32_t *current_cluster, char filename[8], char ext[3])
+{
+    // parse path
+    char buf[16][256] = {0};
+    strsplit(path, '/', buf);
+
+    int index = 0;
+
+    // get path folder until before last index
+    while (strlen(buf[index + 1]) != 0)
+    {
+        if (strlen(buf[index]) > 8)
+            return 3;
+
+        struct FAT32DirectoryTable table = {
+            .table = {}};
+        read_clusters_api(&table, *parent_cluster, 1);
+
+        bool found = false;
+
+        for (size_t i = 1; i < CLUSTER_SIZE / sizeof(struct FAT32DirectoryEntry); i++)
+        {
+            if (!(table.table[i].user_attribute & UATTR_NOT_EMPTY))
+                continue;
+            if ((memcmp(table.table[i].name, buf[index], 8) == 0) && memcmp(table.table[i].ext, "\0\0\0", 3) == 0)
+            {
+                if (!(table.table[i].attribute & ATTR_SUBDIRECTORY))
+                {
+                    return 3;
+                }
+                else
+                {
+                    *parent_cluster = (table.table[i].cluster_high << 16) | table.table[i].cluster_low;
+                    found = true;
+                    break;
+                }
+            }
+        }
+        if (!found)
+            return 3;
+        index++;
+    }
+
+    // check last
+    char file_buf[16][256] = {0};
+    strsplit(buf[index], '.', file_buf);
+    if (strlen(file_buf[0]) > 8)
+        return 4;
+    if (strlen(file_buf[1]) > 3)
+        return 5;
+
+    struct FAT32DirectoryTable table = {
+        .table = {}};
+    read_clusters_api(&table, *parent_cluster, 1);
+    for (size_t i = 1; i < CLUSTER_SIZE / sizeof(struct FAT32DirectoryEntry); i++)
+    {
+        if (!(table.table[i].user_attribute & UATTR_NOT_EMPTY))
+            continue;
+        if ((memcmp(table.table[i].name, file_buf[0], 8) == 0) && memcmp(table.table[i].ext, file_buf[1], 3) == 0)
+        {
+            *current_cluster = (table.table[i].cluster_high << 16) | table.table[i].cluster_low;
+            memcpy(filename, file_buf[0], 8);
+            memcpy(ext, file_buf[1], 3);
+            if (!(table.table[i].attribute & ATTR_SUBDIRECTORY))
+                return 0;
+            else
+                return 1;
+        }
+    }
+    return 2;
 }
 
 void find(uint32_t cluster_number, char name[8], char ext[3], bool *isFound, char curr_path[256])
@@ -1145,7 +1320,7 @@ void ps()
         for (uint32_t i = 0; i < pl.size; i++)
         {
             // print pid
-            put_char(pl.metadata[i].pid + '0', 0xF);
+            print_int(pl.metadata[i].pid);
             set_cursor_col(8);
 
             // print name

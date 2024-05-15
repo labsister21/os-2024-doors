@@ -46,12 +46,22 @@ void print_int(uint32_t num);
 
 void find(uint32_t cluster_number, char name[8], char ext[3], bool *isFound, char curr_path[256]);
 
-// void constructPath(uint32_t clusterAddress);
-
 void exec(char *filename);
 
 void kill(char *pid);
 
 void ps();
+
+/**
+ * @return int8_t
+ * 0: target is file and exist
+ * 1: target is folder and exist
+ * 2: target does not exist
+ * 3: invalid path
+ * 4: name length > 8
+ * 5: ext length > 3
+*/
+
+int8_t get_curr_and_parent_cluster(char *path, uint32_t *parent_cluster, uint32_t *current_cluster, char filename[8], char ext[3]);
 
 #endif
