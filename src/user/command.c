@@ -332,53 +332,69 @@ void ls()
 
 void cd(char *name)
 {
+    char buf[16][256] = {0};
+    char path[256] = {0};
+    memcpy(path, state.work_dir_name, 256);
+    strsplit(name, '/', buf);
+
+    int index = 0;
+    uint32_t curr_cluster = state.work_dir;
     struct FAT32DirectoryTable table = {
-        .table = {}};
-    struct FAT32DriverRequest request = {
-        .buf = &table,
-        .ext = "\0\0\0",
-        .parent_cluster_number = state.work_dir,
-        .buffer_size = CLUSTER_SIZE};
+        .table = {},
+    };
 
-    memcpy(request.name, name, 8);
-
-    uint32_t code;
-    read_directory_api(&request, &code);
-
-    if (code == 0)
+    // get path folder
+    while (strlen(buf[index]) != 0)
     {
-        if (memcmp(name, "..", strlen(name)) == 0)
+        if (strlen(buf[index]) > 8)
         {
-            if (state.work_dir != ROOT_CLUSTER_NUMBER)
+            put_chars("The maximum length of folder name is 8 characters.\n", 51, 0xC);
+            return;
+        }
+
+        read_clusters_api(&table, curr_cluster, 1);
+        bool found = false;
+
+        for (size_t i = 1; i < CLUSTER_SIZE / sizeof(struct FAT32DirectoryEntry); i++)
+        {
+            if (!(table.table[i].user_attribute & UATTR_NOT_EMPTY))
+                continue;
+            if ((memcmp(table.table[i].name, buf[index], 8) == 0) && memcmp(table.table[i].ext, "\0\0\0", 3) == 0)
             {
-                move_back(state.work_dir_name);
+                if (!(table.table[i].attribute & ATTR_SUBDIRECTORY))
+                {
+                    put_chars("Invalid path name\n", 19, 0xC);
+                    return;
+                }
+                else
+                {
+                    found = true;
+                    if (memcmp(buf[index], "..", strlen(buf[index])) == 0)
+                    {
+                        if (curr_cluster != ROOT_CLUSTER_NUMBER)
+                            move_back(path);
+                    }
+                    else
+                    {
+                        strcat(path, "/");
+                        strcat(path, buf[index]);
+                    }
+                    curr_cluster = (table.table[i].cluster_high << 16) | table.table[i].cluster_low;
+                    break;
+                }
             }
         }
-        else
+        if (!found)
         {
-            strcat(state.work_dir_name, "/");
-            strcat(state.work_dir_name, name);
+            put_chars("Invalid path name\n", 19, 0xC);
+            return;
         }
-        state.work_dir = (table.table[0].cluster_high << 16) | (table.table[0].cluster_low);
+        index++;
     }
-    else if (code == 1)
-    {
-        put_chars("'", 1, 0xC);
-        put_chars(name, strlen(name), 0xC);
-        put_chars("'", 1, 0xC);
-        put_chars(" is not a folder.\n", 18, 0xC);
-    }
-    else if (code == 2)
-    {
-        put_chars("'", 1, 0xC);
-        put_chars(name, strlen(name), 0xC);
-        put_chars("'", 1, 0xC);
-        put_chars(" is not found.\n", 15, 0xC);
-    }
-    else
-    {
-        put_chars("Unexpected error occured.\n", 26, 0xC);
-    }
+    state.work_dir = curr_cluster;
+    memset(state.work_dir_name, '\0', 256);
+    memcpy(state.work_dir_name, path, 256);
+    memset(path, '\0', 256);
 }
 
 void mkdir(char *name)
@@ -406,7 +422,7 @@ void mkdir(char *name)
 
     memcpy(request.name, name, 8);
 
-    uint32_t code;
+    int8_t code;
     write_api(&request, &code);
 
     if (code == 0)
@@ -450,8 +466,8 @@ void move_back(char *c)
 
 void rm(char *filename)
 {
-    char name[8] = {0};
-    char ext[3] = {0};
+    char name[256] = {0};
+    char ext[256] = {0};
     uint32_t parent_cluster = state.work_dir;
     uint32_t curr_cluster = 0;
 
@@ -459,12 +475,7 @@ void rm(char *filename)
     if (code == 2)
     {
         put_chars("'", 1, 0xC);
-        put_chars(name, strlen(name), 0xC);
-        if (strlen(ext) != 0)
-        {
-            put_char('.', 0xC);
-            put_chars(ext, 3, 0xC);
-        }
+        put_chars(filename, strlen(filename), 0xC);
         put_chars("'", 1, 0xC);
         put_chars(" is not found.\n", 16, 0xC);
         return;
@@ -493,7 +504,7 @@ void rm(char *filename)
     memcpy(req.name, name, 8);
     memcpy(req.ext, ext, 3);
 
-    uint32_t res_code;
+    int8_t res_code;
     delete_api(&req, &res_code);
 
     switch (res_code)
@@ -511,23 +522,13 @@ void rm(char *filename)
         break;
     case 1:
         put_chars("'", 1, 0xC);
-        put_chars(name, strlen(name), 0xC);
-        if (strlen(ext) != 0)
-        {
-            put_char('.', 0xC);
-            put_chars(ext, 3, 0xC);
-        }
+        put_chars(filename, strlen(filename), 0xC);
         put_chars("'", 1, 0xC);
         put_chars(" is not found.\n", 16, 0xC);
         break;
     case 2:
         put_chars("'", 1, 0xC);
-        put_chars(name, strlen(name), 0xC);
-        if (strlen(ext) != 0)
-        {
-            put_char('.', 0xC);
-            put_chars(ext, 3, 0xC);
-        }
+        put_chars(filename, strlen(filename), 0xC);
         put_chars("'", 1, 0xC);
         put_chars(" is not an empty directory. Use recursive flag to delete this directory\n", 73, 0xC);
         break;
@@ -549,12 +550,7 @@ void rm_rec(char *foldername)
     if (code == 0)
     {
         put_chars("'", 1, 0xC);
-        put_chars(name, strlen(name), 0xC);
-        if (strlen(ext) != 0)
-        {
-            put_char('.', 0xC);
-            put_chars(ext, 3, 0xC);
-        }
+        put_chars(foldername, strlen(foldername), 0xC);
         put_chars("'", 1, 0xC);
         put_chars(" is not a directory.\n", 29, 0xC);
         return;
@@ -562,12 +558,7 @@ void rm_rec(char *foldername)
     if (code == 2)
     {
         put_chars("'", 1, 0xC);
-        put_chars(name, strlen(name), 0xC);
-        if (strlen(ext) != 0)
-        {
-            put_char('.', 0xC);
-            put_chars(ext, 3, 0xC);
-        }
+        put_chars(foldername, strlen(foldername), 0xC);
         put_chars("'", 1, 0xC);
         put_chars(" is not found.\n", 16, 0xC);
         return;
@@ -595,7 +586,7 @@ void rm_rec(char *foldername)
         .buf = &cb,
         .ext = "\0\0\0"};
     memcpy(req.name, name, 8);
-    uint32_t res_code;
+    int8_t res_code;
     delete_recursive_api(&req, &res_code);
     switch (res_code)
     {
@@ -607,13 +598,13 @@ void rm_rec(char *foldername)
         break;
     case 1:
         put_chars("'", 1, 0xC);
-        put_chars(name, strlen(name), 0xC);
+        put_chars(foldername, strlen(foldername), 0xC);
         put_chars("'", 1, 0xC);
         put_chars(" is not a directory.\n", 29, 0xC);
         break;
     case 2:
         put_chars("'", 1, 0xC);
-        put_chars(name, strlen(name), 0xC);
+        put_chars(foldername, strlen(foldername), 0xC);
         put_chars("'", 1, 0xC);
         put_chars(" is not found.\n", 16, 0xC);
         break;
@@ -634,12 +625,7 @@ void cat(char *filename)
     if (check_code == 1)
     {
         put_chars("'", 1, 0xC);
-        put_chars(name, strlen(name), 0xC);
-        if (strlen(ext) != 0)
-        {
-            put_char('.', 0xC);
-            put_chars(ext, 3, 0xC);
-        }
+        put_chars(filename, strlen(filename), 0xC);
         put_chars("'", 1, 0xC);
         put_chars(" is not a file.\n", 29, 0xC);
         return;
@@ -647,12 +633,7 @@ void cat(char *filename)
     if (check_code == 2)
     {
         put_chars("'", 1, 0xC);
-        put_chars(name, strlen(name), 0xC);
-        if (strlen(ext) != 0)
-        {
-            put_char('.', 0xC);
-            put_chars(ext, 3, 0xC);
-        }
+        put_chars(filename, strlen(filename), 0xC);
         put_chars("'", 1, 0xC);
         put_chars(" is not found.\n", 16, 0xC);
         return;
@@ -681,7 +662,7 @@ void cat(char *filename)
     memcpy(req.name, name, 8);
     memcpy(req.ext, ext, 3);
 
-    uint32_t code;
+    int8_t code;
     read_file_api(&req, &code);
 
     switch (code)
@@ -776,7 +757,7 @@ void mv(char *src, char *dest)
         .buffer_size = 0,
     };
 
-    uint32_t res;
+    int8_t res;
     if (check_src == 0)
     {                        // if src is file
         if (check_dest == 1) // if dest is folder
@@ -929,7 +910,7 @@ void cp(char *src, char *dest)
         .buffer_size = 0,
     };
 
-    uint32_t res;
+    int8_t res;
     if (check_dest == 0 || check_dest == 2) // if target is file or not found
     {
         dest_req.parent_cluster_number = dest_parent;
@@ -1038,7 +1019,7 @@ void cp_rec(char *src, char *dest)
         .buffer_size = 0,
     };
 
-    uint32_t res;
+    int8_t res;
     if (check_dest == 1) // if target folder already exist
     {
         // create new subdirectory in destination dir
@@ -1078,7 +1059,7 @@ void cp_rec(char *src, char *dest)
             put_chars("Failed to copy folder\n", 23, 0xC);
             return;
         }
-        get_cluster_number_api(&src_req, &dest_cluster);
+        get_cluster_number_api(&dest_req, &dest_cluster);
         copy_folder_api(src_cluster, dest_cluster, &res);
     }
     if (res == 0)
@@ -1131,13 +1112,15 @@ void print_int(uint32_t num)
     }
 }
 
-int8_t get_curr_and_parent_cluster(char *path, uint32_t *parent_cluster, uint32_t *current_cluster, char filename[8], char ext[3])
+int8_t get_curr_and_parent_cluster(char *path, uint32_t *parent_cluster, uint32_t *current_cluster, char *filename, char *ext)
 {
     // parse path
     char buf[16][256] = {0};
     strsplit(path, '/', buf);
 
     int index = 0;
+    struct FAT32DirectoryTable table = {
+        .table = {}};
 
     // get path folder until before last index
     while (strlen(buf[index + 1]) != 0)
@@ -1145,8 +1128,6 @@ int8_t get_curr_and_parent_cluster(char *path, uint32_t *parent_cluster, uint32_
         if (strlen(buf[index]) > 8)
             return 3;
 
-        struct FAT32DirectoryTable table = {
-            .table = {}};
         read_clusters_api(&table, *parent_cluster, 1);
 
         bool found = false;
@@ -1184,8 +1165,6 @@ int8_t get_curr_and_parent_cluster(char *path, uint32_t *parent_cluster, uint32_
     memcpy(filename, file_buf[0], 8);
     memcpy(ext, file_buf[1], 3);
 
-    struct FAT32DirectoryTable table = {
-        .table = {}};
     read_clusters_api(&table, *parent_cluster, 1);
     for (size_t i = 1; i < CLUSTER_SIZE / sizeof(struct FAT32DirectoryEntry); i++)
     {

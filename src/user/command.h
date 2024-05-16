@@ -62,6 +62,6 @@ void ps();
  * 5: ext length > 3
 */
 
-int8_t get_curr_and_parent_cluster(char *path, uint32_t *parent_cluster, uint32_t *current_cluster, char filename[8], char ext[3]);
+int8_t get_curr_and_parent_cluster(char *path, uint32_t *parent_cluster, uint32_t *current_cluster, char* filename, char* ext);
 
 #endif
