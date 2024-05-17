@@ -237,8 +237,8 @@ void run_command()
         }
         else if (memcmp(cmd, "./", 2) == 0)
         {
-            char filename[8] = {0};
-            memcpy(filename, &cmd[2], 250);
+            char filename[256] = {0};
+            memcpy(filename, &cmd[2], strlen(cmd));
             exec(filename);
         }
         else if (memcmp(cmd, "find", 4) == 0 && cmd_len == 4)
