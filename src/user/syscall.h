@@ -34,29 +34,29 @@ void clear_screen();
 
 void activate_keyboard_input();
 
-void read_file_api(struct FAT32DriverRequest *req, uint32_t *code);
+void read_file_api(struct FAT32DriverRequest *req, int8_t *code);
 
-void read_directory_api(struct FAT32DriverRequest *req, uint32_t *code);
+void read_directory_api(struct FAT32DriverRequest *req, int8_t *code);
 
 void read_clusters_api(void *buf, uint32_t cluster_number, uint32_t cluster_size);
 
-void write_api(struct FAT32DriverRequest *req, uint32_t *code);
+void write_api(struct FAT32DriverRequest *req, int8_t *code);
 
-void delete_api(struct FAT32DriverRequest *req, uint32_t *code);
+void delete_api(struct FAT32DriverRequest *req, int8_t *code);
 
 void get_keyboard_char(char *c);
 
 void set_cursor_col(uint32_t col);
 
-void search_file_api(struct FAT32DriverRequest *req, uint32_t *code);
+void search_file_api(struct FAT32DriverRequest *req, int8_t *code);
 
 void get_cluster_number_api(struct FAT32DriverRequest *req, uint32_t *code);
 
-void copy_folder_api(uint32_t src, uint32_t dest, uint32_t *code);
+void copy_folder_api(uint32_t src, uint32_t dest, int8_t *code);
 
-void copy_file_api(struct FAT32DriverRequest *src, struct FAT32DriverRequest *dest, uint32_t *code);
+void copy_file_api(struct FAT32DriverRequest *src, struct FAT32DriverRequest *dest, int8_t *code);
 
-void delete_recursive_api(struct FAT32DriverRequest *req, uint32_t *code);
+void delete_recursive_api(struct FAT32DriverRequest *req, int8_t *code);
 
 void move_screen_api(char c);
 
@@ -74,6 +74,6 @@ void read_rtc(uint16_t *year, uint16_t *month, uint16_t *day, uint16_t *hour, ui
 
 void put_char_position(uint32_t row, uint32_t col, char c);
 
-void get_time_stamp(uint32_t * time);
+void get_time_stamp(uint32_t *time);
 
 #endif
