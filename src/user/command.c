@@ -9,7 +9,7 @@ static struct ShellState state =
 
 void print_working_dir()
 {
-    put_chars("user@doOrS", 10, 0x2);
+    put_chars("user@doOrS", 10, 0xA);
     put_chars(":", 1, 0x7);
     put_chars(state.work_dir_name, 256, 0x9);
     put_chars("$ ", 2, 0x7);
@@ -214,7 +214,6 @@ void run_command()
         }
         else if (memcmp(cmd, "kill", cmd_len) == 0 && cmd_len == 4)
         {
-            // ps();
             if (strlen(buf[1]) == 0)
             {
                 put_chars("Expected process identifier\n", 29, 0xC);
@@ -239,7 +238,7 @@ void run_command()
         else if (memcmp(cmd, "./", 2) == 0)
         {
             char filename[8] = {0};
-            memcpy(filename, &cmd[2], 8);
+            memcpy(filename, &cmd[2], 250);
             exec(filename);
         }
         else if (memcmp(cmd, "find", 4) == 0 && cmd_len == 4)
@@ -1219,30 +1218,69 @@ void find(uint32_t cluster_number, char name[8], char ext[3], bool *isFound, cha
 
 void exec(char *filename)
 {
+    char name[256] = {0};
+    char ext[256] = {0};
+    uint32_t parent_cluster = state.work_dir;
+    uint32_t curr_cluster = 0;
+
+    int8_t code = get_curr_and_parent_cluster(filename, &parent_cluster, &curr_cluster, name, ext);
+
+    if (code == 1)
+    {
+        put_chars("'", 1, 0xC);
+        put_chars(filename, strlen(filename), 0xC);
+        put_chars("'", 1, 0xC);
+        put_chars(" is not a file.\n", 17, 0xC);
+        return;
+    }
+    if (code == 2)
+    {
+        put_chars("'", 1, 0xC);
+        put_chars(filename, strlen(filename), 0xC);
+        put_chars("'", 1, 0xC);
+        put_chars(" is not found.\n", 16, 0xC);
+        return;
+    }
+    if (code == 3)
+    {
+        put_chars("Invalid Path.\n", 15, 0xC);
+        return;
+    }
+    if (code == 4)
+    {
+        put_chars("Maximum file name length is 8.\n", 32, 0xC);
+        return;
+    }
+    if (code == 5)
+    {
+        put_chars("Maximum extension name length is 3.\n", 37, 0xC);
+        return;
+    }
+
     struct FAT32DriverRequest req = {
         .buf = (uint8_t *)0,
         .buffer_size = 0x100000,
         .ext = "\0\0\0",
-        .parent_cluster_number = state.work_dir,
+        .parent_cluster_number = parent_cluster,
     };
-    memcpy(req.name, filename, strlen(filename));
+    memcpy(req.name, name, strlen(name));
 
-    int32_t code;
-    create_process_api(&req, &code);
+    int32_t res_code;
+    create_process_api(&req, &res_code);
 
-    if (code == 0)
+    if (res_code == 0)
     {
         put_chars("Process created succesfully\n", 29, 0xF);
     }
-    else if (code == 1)
+    else if (res_code == 1)
     {
         put_chars("Maximum process exceeded\n", 26, 0xC);
     }
-    else if (code == 2)
+    else if (res_code == 2)
     {
         put_chars("Invalid entrypoint\n", 20, 0xC);
     }
-    else if (code == 3)
+    else if (res_code == 3)
     {
         put_chars("Not enough memory\n", 19, 0xC);
     }
