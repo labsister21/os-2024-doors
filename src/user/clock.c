@@ -1,20 +1,6 @@
 #include <stdint.h>
 #include "syscall.h"
 
-void sleep()
-{
-    uint32_t init_time;
-    get_time_stamp(&init_time);
-
-    uint32_t next_time;
-    get_time_stamp(&next_time);
-
-    while (next_time - init_time < 1)
-    {
-        get_time_stamp(&next_time);
-    }
-}
-
 int main(void)
 {
     uint16_t year, month, day, hour, minute, second;
@@ -75,7 +61,7 @@ int main(void)
             put_char_position(24, 79, ssecond[1]);
         }
 
-        sleep();
+        // sleep();
     }
     return 0;
 }

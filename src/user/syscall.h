@@ -76,4 +76,8 @@ void put_char_position(uint32_t row, uint32_t col, char c);
 
 void get_time_stamp(uint32_t *time);
 
+void enable_cursor();
+
+void disable_cursor();
+
 #endif

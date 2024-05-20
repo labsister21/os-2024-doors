@@ -165,6 +165,12 @@ void syscall(struct InterruptFrame frame)
     case 25:
         *(uint32_t *)frame.cpu.general.ebx = get_timestamp();
         break;
+    case 26:
+        disable_cursor();
+        break;
+    case 27:
+        enable_cursor(14, 15);
+        break;
     default:
         break;
     }

@@ -235,6 +235,10 @@ void run_command()
                 exec(buf[1]);
             }
         }
+        else if (memcmp(cmd, "uwu", cmd_len) == 0 && cmd_len == 3)
+        {
+            hellokitty();
+        }
         else if (memcmp(cmd, "./", 2) == 0)
         {
             char filename[256] = {0};
@@ -1080,8 +1084,8 @@ void cp_rec(char *src, char *dest)
 void help()
 {
     put_chars("Available commands: \n", 22, 0xB);
-    put_chars("cat filename          show content of file\n", 44, 0xB);
-    put_chars("cd target             move current directory to target\n", 56, 0xB);
+    put_chars("cat [filename]        show content of file\n", 44, 0xB);
+    put_chars("cd [target]           move current directory to target\n", 56, 0xB);
     put_chars("clear                 clear current screen\n", 44, 0xB);
     put_chars("cls                   clear current screen\n", 44, 0xB);
     put_chars("cp [-r] source dest   copy file/folder to destination\n", 55, 0xB);
@@ -1090,6 +1094,10 @@ void help()
     put_chars("mv source dest        move file/folder to destination\n", 55, 0xB);
     put_chars("rm [-r] target        delete folder/ file\n", 43, 0xB);
     put_chars("find name             find file/folder with given name\n", 56, 0xB);
+    put_chars("kill [pid]            kill process with process id pid\n", 56, 0xB);
+    put_chars("exec [filename]       execute binary file\n", 43, 0xB);
+    put_chars("./[filename]          execute binary file\n", 43, 0xB);
+    put_chars("ps                    show process list\n", 43, 0xB);
 }
 
 void print_int(uint32_t num)
@@ -1357,4 +1365,80 @@ void ps()
             }
         }
     }
+}
+
+void sleep()
+{
+    uint32_t init_time;
+    get_time_stamp(&init_time);
+
+    uint32_t next_time;
+    get_time_stamp(&next_time);
+
+    while (next_time - init_time < 1)
+    {
+        get_time_stamp(&next_time);
+    }
+}
+
+void loading_bar() {
+    put_chars("0%\n", 4, 0xA);
+    put_chars("          ", 11, 0x70);
+    disable_cursor();
+    sleep();
+    enable_cursor();
+    clear_screen();
+
+    put_chars("10%\n", 5, 0xA);
+    put_char(' ', 0x80);
+    put_chars("         ", 10, 0x70);
+    disable_cursor();
+    sleep();
+    enable_cursor();
+    clear_screen();
+
+    put_chars("30%\n", 5, 0xA);
+    put_chars("   ", 3, 0x80);
+    put_chars("       ", 7, 0x70);
+    disable_cursor();
+    sleep();
+    enable_cursor();
+    clear_screen();
+
+    put_chars("50%\n", 5, 0xA);
+    put_chars("     ", 5, 0x80);
+    put_chars("     ", 5, 0x70);
+    disable_cursor();
+    sleep();
+    enable_cursor();
+    clear_screen();
+
+    put_chars("70%\n", 5, 0xA);
+    put_chars("       ", 7, 0x80);
+    put_chars("   ", 3, 0x70);
+    disable_cursor();
+    sleep();
+    enable_cursor();
+    clear_screen();
+
+    put_chars("100%\n", 6, 0xA);
+    put_chars("          ", 11, 0x80);
+    disable_cursor();
+    sleep();
+    enable_cursor();
+    clear_screen();
+}
+
+void doors()
+{
+    put_chars("      _        ___       ____\n", 31, 0x6);
+    sleep();
+    put_chars("   __| | ___  / _ \\ _ __/ ___|\n", 32, 0x6);
+    sleep();
+    put_chars("  / _` |/ _ \\| | | | '__\\___ \\\n", 32, 0x6);
+    sleep();
+    put_chars(" | (_| | (_) | |_| | |   ___) |\n", 33, 0x6);
+    sleep();
+    put_chars("  \\__,_|\\___/ \\___/|_|  |____/\n\n", 33, 0x6);
+    sleep();
 }

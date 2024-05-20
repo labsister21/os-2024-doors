@@ -36,7 +36,6 @@ void read_rtc(uint16_t *year, uint16_t *month, uint16_t *day, uint16_t *hour, ui
     }
 
     // Convert 12 hour clock to 24 hour clock
-
     if (!(registerB & 0x02) && (*hour & 0x80))
     {
         *hour = ((*hour & 0x7F) + 12) % 24;

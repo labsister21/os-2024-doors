@@ -64,4 +64,10 @@ void ps();
 
 int8_t get_curr_and_parent_cluster(char *path, uint32_t *parent_cluster, uint32_t *current_cluster, char* filename, char* ext);
 
+void doors();
+
+void sleep();
+
+void loading_bar();
+
 #endif

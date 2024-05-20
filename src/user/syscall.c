@@ -136,3 +136,13 @@ void get_time_stamp(uint32_t *time)
 {
     syscall(25, (uint32_t)time, 0, 0);
 }
+
+void disable_cursor()
+{
+    syscall(26, 0, 0, 0);
+}
+
+void enable_cursor()
+{
+    syscall(27, 0, 0, 0);
+}
