@@ -1,6 +1,6 @@
 # doOrS
 
-![Demo GIF](./doOrS_demo.gif)
+![Demo GIF](./doOrS-demo.gif)
 
 ## Project Description
 
@@ -10,17 +10,86 @@ Milestone 0 focused on preparing the tools necessary for working on this operati
 
 Milestone 1 focused on the initial development of the operating system, including enabling and handling interrupts, creating simple drivers for the display and keyboard, and developing the file system.
 
-Milestone 2 focused on preparing the environment for user process. This included creating a memory management system, entering user mode, and developing shell.
+Milestone 2 focused on preparing the environment for user process. This included creating a memory management system, entering user mode, and developing shell. dditionally, we implemented several bonus features such as recursive cp and rm, relative pathing, and a scrollable shell.
 
 Milestone 3 focused on enabling the operating system to run multiple processes concurrently. This included implementing process switching with context switches, creating a process manager to handle scheduling algorithms, and managing the creation, termination, and cleanup of processes.
 
 ## Running The Program
 
-Run the makefile using `make run` command, the program will automatically be compiled, and a kernel window will pop up using the QEMU Emulator.
-
 for creating a disk image, use `make disk` command, this will create a new disk image and delete the last one.
 
-for inserting the shell, use `make insert-shell` command, this will insert a shell into the user space
+for inserting the shell, use `make insert-shell` command, this will insert a shell into the root directory
+
+fot inserting the clock, use `make insert-clock` command, this will insert clock into the root directory
+
+Run the makefile using `make run` command, the program will automatically be compiled, and a kernel window will podp up using the QEMU Emulator.
+
+## Commands
+
+In the user shell, you can run the following commands:
+
+<table>
+  <tr>
+    <td>1. <code>cat [filename]</code></td>
+    <td>: show content of file.</td>
+  </tr>
+  <tr>
+    <td>2. <code>cd [target]</code></td>
+    <td>: move current directory to target.</td>
+  </tr>
+  <tr>
+    <td>3. <code>clear</code></td>
+    <td>: clear current screen.</td>
+  </tr>
+  <tr>
+    <td>4. <code>cls</code></td>
+    <td>: clear current screen.</td>
+  </tr>
+  <tr>
+    <td>5. <code>cp [-r] source dest</code></td>
+    <td>: copy file/folder to destination.</td>
+  </tr>
+  <tr>
+    <td>6. <code>ls [foldername]</code></td>
+    <td>: show current or target directory contents</td>
+  </tr>
+  <tr>
+    <td>7. <code>mkdir dirname</code></td>
+    <td>: create new directory\n</td>
+  </tr>
+  <tr>
+    <td>8. <code>mv source dest</code></td>
+    <td>: move file/folder to destination</td>
+  </tr>
+  <tr>
+    <td>9. <code>rm [-r] target</code></td>
+    <td>: delete folder/ file.</td>
+  </tr>
+  <tr>
+    <td>10. <code>find name</code></td>
+    <td>: find file/folder with given name.</td>
+  </tr>
+  <tr>
+    <td>11. <code>kill [pid]</code></td>
+    <td>: kill process with process id pid.</td>
+  </tr>
+  <tr>
+    <td>12. <code>exec [filename]</code></td>
+    <td>: execute binary file.</td>
+  </tr>
+  <tr>
+    <td>13. <code>./[filename]</code></td>
+    <td>: execute binary file.</td>
+  </tr>
+  <tr>
+    <td>14. <code>ps</code></td>
+    <td>: show process list.</td>
+  </tr>
+  <tr>
+    <td>15. <code>help</code></td>
+    <td>: show available commands.</td>
+  </tr>
+</table>
 
 ## Program Structure
 
