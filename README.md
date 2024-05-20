@@ -163,11 +163,11 @@ In the user shell, you can run the following commands:
 
 ```
 
-## Team Member
+## Team Member 
 
-| NIM      | Name                        |
-| -------- | --------------------------- |
-| 13522068 | Adril Putra Merin Manurung  |
-| 13522098 | Suthasoma Mahardhika Munthe |
-| 13522112 | Dimas Bagoes Hedrianto      |
-| 13522118 | Berto Richardo Togatorop    |
+| NIM      | Name                        | Github Profile                                    |
+| -------- | --------------------------- | ------------------------------------------------- |
+| 13522068 | Adril Putra Merin           | [ninoaddict](https://github.com/ninoaddict)       |
+| 13522098 | Suthasoma Mahardhika Munthe | [sotul04](https://github.com/sotul04)             |
+| 13522112 | Dimas Bagoes Hendrianto     | [dimasb1954](https://github.com/dimasb1954)       |
+| 13522118 | Berto Richardo Togatorop    | [BertoRichardo](https://github.com/BertoRichardo) |
