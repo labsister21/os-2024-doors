@@ -237,7 +237,7 @@ void run_command()
         }
         else if (memcmp(cmd, "uwu", cmd_len) == 0 && cmd_len == 3)
         {
-            hellokitty();
+            doors();
         }
         else if (memcmp(cmd, "./", 2) == 0)
         {
