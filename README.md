@@ -1,8 +1,10 @@
-# doOrS
+<h1 align="center">🚪doOrS🚪</h1>
 
-![Demo GIF](./doOrS-demo.gif)
+<div align="center">
+  <img src="https://github.com/labsister21/os-2024-doors/blob/main/doOrS-demo.gif" /> <br />
+</div>
 
-## Project Description
+## 🌟 Project Description
 
 This Repository is meant for the Operating System Course that serve as an introduction to kernel development and concretely demonstrate the subsystems within an operating system. The target platform for the operating system is the x86 32-bit Protected Mode, which will later be run using QEMU.
 
@@ -14,7 +16,7 @@ Milestone 2 focused on preparing the environment for user process. This included
 
 Milestone 3 focused on enabling the operating system to run multiple processes concurrently. This included implementing process switching with context switches, creating a process manager to handle scheduling algorithms, and managing the creation, termination, and cleanup of processes.
 
-## Running The Program
+## 🏃 Running The Program
 
 for creating a disk image, use `make disk` command, this will create a new disk image and delete the last one.
 
@@ -24,7 +26,7 @@ fot inserting the clock, use `make insert-clock` command, this will insert clock
 
 Run the makefile using `make run` command, the program will automatically be compiled, and a kernel window will podp up using the QEMU Emulator.
 
-## Commands
+## 💻 Commands
 
 In the user shell, you can run the following commands:
 
@@ -91,7 +93,7 @@ In the user shell, you can run the following commands:
   </tr>
 </table>
 
-## Program Structure
+## 📁 Program Structure
 
 ```
 .
@@ -163,7 +165,7 @@ In the user shell, you can run the following commands:
 
 ```
 
-## Team Member 
+## 🧑‍🤝‍🧑 Team Member 
 
 | NIM      | Name                        | Github Profile                                    |
 | -------- | --------------------------- | ------------------------------------------------- |
